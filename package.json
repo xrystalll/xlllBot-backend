@@ -1,0 +1,33 @@
+{
+  "name": "xlllbot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Twitch chat bot by xrystalll",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app",
+    "dev": "nodemon app"
+  },
+  "author": "xrystalll",
+  "dependencies": {
+    "config": "^3.3.1",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "express": "^4.17.1",
+    "express-session": "^1.17.0",
+    "helmet": "^3.22.0",
+    "hpp": "^0.2.3",
+    "mongoose": "^5.9.7",
+    "mongoose-findorcreate": "^3.0.0",
+    "passport": "^0.4.1",
+    "passport-oauth": "^1.0.0",
+    "request": "^2.88.2",
+    "socket.io": "^2.3.0",
+    "tmi.js": "^1.5.0",
+    "x-xss-protection": "^1.3.0",
+    "youtube-info": "^1.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  }
+}
