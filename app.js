@@ -5,7 +5,7 @@ const express = require('express')
 const app = express()
 const server = require('http').createServer(app)
 const io = require('socket.io').listen(server)
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 7000
 
 const { checkSettings, declOfNum, checkUrl } = require(path.join(__dirname, 'modules', 'Utils'))
 const routes = require(path.join(__dirname, 'routes'))
