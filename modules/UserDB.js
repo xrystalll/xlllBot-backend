@@ -12,8 +12,7 @@ const UserSchema = new Schema({
     required: true
   },
   hash: {
-    type: String,
-    required: true
+    type: String
   },
   logo: {
     type: String

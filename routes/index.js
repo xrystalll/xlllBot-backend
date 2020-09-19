@@ -22,11 +22,11 @@ router.get('/api/user', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => res.json(data))
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
@@ -42,11 +42,11 @@ router.get('/api/channel', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
 
@@ -77,11 +77,11 @@ router.get('/api/commands/all', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
 
@@ -103,11 +103,11 @@ router.get('/api/commands/add', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
       const { tag, text } = req.query
@@ -130,11 +130,11 @@ router.get('/api/commands/edit', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
       const { id, tag, text } = req.query
@@ -157,11 +157,11 @@ router.get('/api/commands/delete', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
       const { id } = req.query
@@ -187,11 +187,11 @@ router.get('/api/words/all', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
 
@@ -213,11 +213,11 @@ router.get('/api/words/add', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
       const { word, duration } = req.query
@@ -241,11 +241,11 @@ router.get('/api/words/delete', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
       const { id } = req.query
@@ -271,11 +271,11 @@ router.get('/api/settings/all', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
 
@@ -348,11 +348,11 @@ router.get('/api/settings', (req, res) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const token = credentials[1]
+  const [user, token] = credentials
 
-  if (!token) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
 
-  UserDB.findOne({ hash: token })
+  UserDB.findOne({ login: user, hash: token })
     .then(data => {
       const channel = data.login
       const { name, state } = req.query

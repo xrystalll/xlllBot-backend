@@ -6,7 +6,7 @@ const channels = []
 
 ChannelDB.find()
   .then(data => {
-    data.forEach(i => {
+    data.map(i => {
       channels.push(i.name)
     })
   })

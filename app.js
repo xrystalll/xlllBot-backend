@@ -37,8 +37,6 @@ setTimeout(() => {
   client.connect()
 }, 1000)
 
-client.on('connected', () => console.log('Connected to chat.'))
-
 client.on('chat', (channel, user, message, self) => {
   if (self) return
 
@@ -257,9 +255,7 @@ passport.use('twitch', new OAuth2Strategy({
       if (res && res.channel === data.login) {
         UserDB.findOrCreate({
           twitchId: data.id,
-          login: data.login,
-          hash: crypto.createHash('md5').update(data.id + 'is' + data.login).digest('hex'),
-          logo: data.profile_image_url
+          login: data.login
         })
         next(null, profile)
       } else {
@@ -274,16 +270,23 @@ app.get('/auth/twitch', passport.authenticate('twitch', { scope: 'user_read' }))
 app.get('/auth/twitch/callback', passport.authenticate('twitch', { failureRedirect: config.get('clientEndPoint') + '/auth/error' }), (req, res) => {
   if (!req.session.passport) return res.status(401).redirect(config.get('clientEndPoint') + '/auth/error')
 
-  const { id, login } = req.session.passport.user.data[0]
+  const { id } = req.session.passport.user.data[0]
 
   if (!id) return res.status(401).redirect(config.get('clientEndPoint') + '/auth/error')
 
-  UserDB.find({ twitchId: id })
-    .then(data => {
-      io.sockets.emit('user_data', data),
-      res.redirect(config.get('clientEndPoint') + '/auth')
-    })
+  const hash = crypto.createHash('md5').update(req.session.passport.user.refreshToken + 'is' + req.session.passport.user.data[0].login).digest('hex')
+  const logo = req.session.passport.user.data[0].profile_image_url
+
+  UserDB.updateOne({ twitchId: id }, { hash, logo })
+    .then(() => {
+      UserDB.find({ twitchId: id })
+        .then(data => {
+          io.sockets.emit('user_data', data),
+          res.redirect(config.get('clientEndPoint') + '/auth')
+        })
+        .catch(error => res.status(401).redirect(config.get('clientEndPoint') + '/auth/error'))
     .catch(error => res.status(401).redirect(config.get('clientEndPoint') + '/auth/error'))
+  })
 }),
 
 app.use('/', routes),
