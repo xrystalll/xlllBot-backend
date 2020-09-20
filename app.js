@@ -281,8 +281,8 @@ app.get('/auth/twitch/callback', passport.authenticate('twitch', { failureRedire
     .then(() => {
       UserDB.find({ twitchId: id })
         .then(data => {
-          io.sockets.emit('user_data', data),
-          res.redirect(config.get('clientEndPoint') + '/auth')
+          io.sockets.emit('user_data', { login: data[0].login, logo: data[0].logo }),
+          res.redirect(config.get('clientEndPoint') + '/auth/?sess=' + hash)
         })
         .catch(error => res.status(401).redirect(config.get('clientEndPoint') + '/auth/error'))
     .catch(error => res.status(401).redirect(config.get('clientEndPoint') + '/auth/error'))

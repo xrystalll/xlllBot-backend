@@ -264,6 +264,8 @@ const game = (channel, roomId, args) => {
     break
     case 'csgo': game = 'Counter-Strike: Global Offensive'
     break
+    case 'valorant': game = 'Valorant'
+    break
     case 'lol': game = 'League of Legends'
     break
     case 'dota2': game = 'Dota 2'
@@ -296,7 +298,7 @@ const game = (channel, roomId, args) => {
     break
     case 'poe': game = 'Path of Exile'
     break
-    case 'witcher': game = 'The Witcher 3: Wild Hunt'
+    case 'witcher3': game = 'The Witcher 3: Wild Hunt'
     break
     case 'cyberpunk': game = 'Cyberpunk 2077'
     break
@@ -333,6 +335,12 @@ const game = (channel, roomId, args) => {
     case 'osu': game = 'osu!'
     break
     case 'sims4': game = 'The Sims 4'
+    break
+    case 'amongus': game = 'Among Us'
+    break
+    case 'fallguys': game = 'Fall Guys'
+    break
+    case 'brawlstars': game = 'Brawl Stars'
     break
     default: game = args.join(' ')
     break
@@ -480,6 +488,7 @@ const CallCommand = (command, messageInfo, io) => {
       title(channel, state.user['room-id'], command.args)
       break
     case 'poll':
+    case 'vote':
       poll(channel, command.args)
       break
     default:
