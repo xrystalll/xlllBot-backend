@@ -32,10 +32,7 @@ const EventsDB = require(path.join(__dirname, 'modules', 'EventsDB'))
 const client = require(path.join(__dirname, 'modules', 'client'))
 const CommandResolver = require(path.join(__dirname, 'modules', 'CommandResolver'))
 
-
-setTimeout(() => {
-  client.connect()
-}, 1000)
+client.connect()
 
 client.on('chat', (channel, user, message, self) => {
   if (self) return
@@ -51,7 +48,7 @@ client.on('chat', (channel, user, message, self) => {
 
   BadWordsDB.find({ channel: channel.substr(1).toLowerCase() })
     .then(data => {
-      data.forEach(i => {
+      data.map(i => {
         if (message.includes(i.word) && i.channel === channel.substr(1).toLowerCase()) {
           client.deletemessage(channel, user.id).catch(err => console.error(err))
           client.timeout(channel, user.username, i.duration).catch(err => console.error(err))

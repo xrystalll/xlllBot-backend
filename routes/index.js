@@ -11,6 +11,7 @@ const SettingsDB = require(path.join(__dirname, '..', 'modules', 'SettingsDB'))
 const EventsDB = require(path.join(__dirname, '..', 'modules', 'EventsDB'))
 const VideosDB = require(path.join(__dirname, '..', 'modules', 'VideosDB'))
 const InvitesDB = require(path.join(__dirname, '..', 'modules', 'InvitesDB'))
+const GamesDB = require(path.join(__dirname, '..', 'modules', 'GamesDB'))
 
 // get user info
 router.get('/api/user', (req, res) => {
@@ -370,6 +371,172 @@ router.get('/api/settings', (req, res) => {
         .catch(error => res.status(401).json({ error: 'Access Denied' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
+}),
+
+
+// games api
+router.get('/api/games', (req, res) => {
+  GamesDB.find()
+    .then(data => {
+      if (data.length) {
+        res.json(data)
+      } else {
+        const defaultGames = [
+          {
+            game: 'Just Chatting',
+            short: 'justchatting'
+          }, {
+            game: 'Games + Demos',
+            short: 'demo'
+          }, {
+            game: 'Art',
+            short: 'art'
+          }, {
+            game: 'Science & Technology',
+            short: 'science'
+          }, {
+            game: 'Marbles On Stream',
+            short: 'marbles'
+          }, {
+            game: 'Fortnite',
+            short: 'fortnite'
+          }, {
+            game: 'PLAYERUNKNOWN\'S BATTLEGROUNDS',
+            short: 'pubg'
+          }, {
+            game: 'Apex Legends',
+            short: 'apex'
+          }, {
+            game: 'Overwatch',
+            short: 'overwatch'
+          }, {
+            game: 'Counter-Strike: Global Offensive',
+            short: 'csgo'
+          }, {
+            game: 'Valorant',
+            short: 'valorant'
+          }, {
+            game: 'League of Legends',
+            short: 'lol'
+          }, {
+            game: 'Dota 2',
+            short: 'dota2'
+          }, {
+            game: 'World of Warcraft',
+            short: 'wow'
+          }, {
+            game: 'Hearthstone',
+            short: 'hearthstone'
+          }, {
+            game: 'Tom Clancy\'s Rainbow Six: Siege',
+            short: 'rainbowsix'
+          }, {
+            game: 'Rocket League',
+            short: 'rocketleague'
+          }, {
+            game: 'Minecraft',
+            short: 'minecraft'
+          }, {
+            game: 'Dead by Daylight',
+            short: 'dbd'
+          }, {
+            game: 'Grand Theft Auto III',
+            short: 'gta3'
+          }, {
+            game: 'Grand Theft Auto: Vice City',
+            short: 'gtavc'
+          }, {
+            game: 'Grand Theft Auto: San Andreas',
+            short: 'gtasa'
+          }, {
+            game: 'Grand Theft Auto IV',
+            short: 'gta4'
+          }, {
+            game: 'Grand Theft Auto V',
+            short: 'gta5'
+          }, {
+            game: 'Escape From Tarkov',
+            short: 'tarkov'
+          }, {
+            game: 'Rust',
+            short: 'rust'
+          }, {
+            game: 'Path of Exile',
+            short: 'poe'
+          }, {
+            game: 'The Witcher 3: Wild Hunt',
+            short: 'witcher3'
+          }, {
+            game: 'Cyberpunk 2077',
+            short: 'cyberpunk'
+          }, {
+            game: 'Dead Space 3',
+            short: 'deadspace3'
+          }, {
+            game: 'Dead Space 2',
+            short: 'deadspace2'
+          }, {
+            game: 'Dead Space',
+            short: 'deadspace'
+          }, {
+            game: 'Death Stranding',
+            short: 'deathstranding'
+          }, {
+            game: 'Outlast',
+            short: 'outlast'
+          }, {
+            game: 'Outlast 2',
+            short: 'outlast2'
+          }, {
+            game: 'Raft',
+            short: 'raft'
+          }, {
+            game: 'Warface',
+            short: 'warface'
+          }, {
+            game: 'DayZ',
+            short: 'dayz'
+          }, {
+            game: 'Sea of Thieves',
+            short: 'seaofthieves'
+          }, {
+            game: 'Dark Souls III',
+            short: 'darksouls3'
+          }, {
+            game: 'Red Dead Redemption',
+            short: 'rdr'
+          }, {
+            game: 'Red Dead Redemption 2',
+            short: 'rdr2'
+          }, {
+            game: 'VRChat',
+            short: 'vrchat'
+          }, {
+            game: 'Terraria',
+            short: 'terraria'
+          }, {
+            game: 'osu!',
+            short: 'osu'
+          }, {
+            game: 'The Sims 4',
+            short: 'sims4'
+          }, {
+            game: 'Among Us',
+            short: 'amongus'
+          }, {
+            game: 'Fall Guys',
+            short: 'fallguys'
+          }, {
+            game: 'Brawl Stars',
+            short: 'brawlstars'
+          }
+        ]
+        GamesDB.insertMany(defaultGames)
+          .then(output => res.json(output))
+          .catch(error => res.status(500).json({ error }))
+      }
+    })
+    .catch(error => res.status(500).json({ error }))
 }),
 
 

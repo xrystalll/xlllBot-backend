@@ -17,6 +17,7 @@ module.exports = {
     debug: config.get('options.debug')
   },
   connection: {
+    secure: config.get('connection.secure'),
     reconnect: config.get('connection.reconnect')
   },
   identity: {

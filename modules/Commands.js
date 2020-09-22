@@ -229,6 +229,7 @@ const addVideo = (channel, state, args, io) => {
 
 const slipVideo = (channel, io) => {
   if (!checkModeratorPermission()) return
+
   checkSettings(channel, 'songrequest').then(bool => {
     if (bool) io.sockets.emit('skip', { channel: channel.toLowerCase() })
   })
@@ -439,7 +440,7 @@ const CallCommand = (command, messageInfo, io) => {
 
   CommandDB.find()
     .then(data => {
-      data.forEach(i => {
+      data.map(i => {
         if (i.tag === command.command && i.channel === channel.toLowerCase()) {
           client.say(channel, i.text)
         }
