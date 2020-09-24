@@ -4,6 +4,7 @@ const { checkSettings, timeFormat, declOfNum } = require(path.join(__dirname, 'U
 const client = require(path.join(__dirname, 'client'))
 const CommandDB = require(path.join(__dirname, 'CommandDB'))
 const VideosDB = require(path.join(__dirname, 'VideosDB'))
+const GamesDB = require(path.join(__dirname, 'GamesDB'))
 const request = require('request')
 const ytInfo = require('youtube-info')
 let state = null
@@ -223,7 +224,7 @@ const addVideo = (channel, state, args, io) => {
           }
         }
       })
-    } else client.say(channel, 'Возможность заказывать видео выключена.')
+    } else client.say(channel, 'Возможность заказывать видео выключена!')
   })
 }
 
@@ -238,135 +239,44 @@ const slipVideo = (channel, io) => {
 const game = (channel, roomId, args) => {
   if (!checkModeratorPermission()) return
 
-  const gameParam = args[0]
+  const short = args[0]
 
-  if (!gameParam) return
-
-  let game
-  switch (gameParam.toLowerCase()) {
-    case 'irl':
-    case 'justchatting': game = 'Just Chatting'
-    break
-    case 'demo': game = 'Games + Demos'
-    break
-    case 'art': game = 'Art'
-    break
-    case 'science': game = 'Science & Technology'
-    break
-    case 'marbles': game = 'Marbles On Stream'
-    break
-    case 'fortnite': game = 'Fortnite'
-    break
-    case 'pubg': game = 'PLAYERUNKNOWN\'S BATTLEGROUNDS'
-    break
-    case 'apex': game = 'Apex Legends'
-    break
-    case 'overwatch': game = 'Overwatch'
-    break
-    case 'csgo': game = 'Counter-Strike: Global Offensive'
-    break
-    case 'valorant': game = 'Valorant'
-    break
-    case 'lol': game = 'League of Legends'
-    break
-    case 'dota2': game = 'Dota 2'
-    break
-    case 'wow': game = 'World of Warcraft'
-    break
-    case 'hearthstone': game = 'Hearthstone'
-    break
-    case 'rainbowsix': game = 'Tom Clancy\'s Rainbow Six: Siege'
-    break
-    case 'rocketleague': game = 'Rocket League'
-    break
-    case 'minecraft': game = 'Minecraft'
-    break
-    case 'dbd': game = 'Dead by Daylight'
-    break
-    case 'gta3': game = 'Grand Theft Auto III'
-    break
-    case 'gtavc': game = 'Grand Theft Auto: Vice City'
-    break
-    case 'gtasa': game = 'Grand Theft Auto: San Andreas'
-    break
-    case 'gta4': game = 'Grand Theft Auto IV'
-    break
-    case 'gta5': game = 'Grand Theft Auto V'
-    break
-    case 'tarkov': game = 'Escape From Tarkov'
-    break
-    case 'rust': game = 'Rust'
-    break
-    case 'poe': game = 'Path of Exile'
-    break
-    case 'witcher3': game = 'The Witcher 3: Wild Hunt'
-    break
-    case 'cyberpunk': game = 'Cyberpunk 2077'
-    break
-    case 'deadspace3': game = 'Dead Space 3'
-    break
-    case 'deadspace2': game = 'Dead Space 2'
-    break
-    case 'deadspace1': game = 'Dead Space'
-    break
-    case 'deathstranding': game = 'Death Stranding'
-    break
-    case 'outlast': game = 'Outlast'
-    break
-    case 'outlast2': game = 'Outlast 2'
-    break
-    case 'raft': game = 'Raft'
-    break
-    case 'warface': game = 'Warface'
-    break
-    case 'dayz': game = 'DayZ'
-    break
-    case 'seaofthieves': game = 'Sea of Thieves'
-    break
-    case 'darksouls3': game = 'Dark Souls III'
-    break
-    case 'rdr2': game = 'Red Dead Redemption 2'
-    break
-    case 'rdr': game = 'Red Dead Redemption'
-    break
-    case 'vrchat': game = 'VRChat'
-    break
-    case 'terraria': game = 'Terraria'
-    break
-    case 'osu': game = 'osu!'
-    break
-    case 'sims4': game = 'The Sims 4'
-    break
-    case 'amongus': game = 'Among Us'
-    break
-    case 'fallguys': game = 'Fall Guys'
-    break
-    case 'brawlstars': game = 'Brawl Stars'
-    break
-    default: game = args.join(' ')
-    break
-  }
-
-  const streamObject = {"channel": {game, "channel_feed_enabled": true}}
+  if (!short) return
 
   checkSettings(channel, 'changegame').then(bool => {
     if (bool) {
-      request({
-        url: 'https://api.twitch.tv/kraken/channels/' + roomId,
-        method: 'PUT',
-        headers: {
-          Accept: 'application/vnd.twitchtv.v5+json',
-          Authorization: 'OAuth ' + config.get('bot.oauth_token'),
-          'Client-ID': config.get('bot.client_id'),
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(streamObject)
-      }, (err, res, body) => {
-        if (err) return
+      GamesDB.find({ short })
+        .then(data => {
+          if (!!data.length) {
+            setGame(channel, roomId, data[0].game)
+          } else {
+            setGame(channel, roomId, args.join(' '))
+          }
+        })
+        .catch(err => console.error(err))
+    } else client.say(channel, 'Возможность менять категорию стрима командой выключена!')
+  })
+}
 
-        client.say(channel, `Установлена категория ${game}`)
-      })
-    } else client.say(channel, 'Возможность менять категорию стрима командой выключена.')
+const setGame = (channel, roomId, game) => {
+  if (!checkModeratorPermission()) return
+
+  const streamObject = {"channel": { game, "channel_feed_enabled": true }}
+
+  request({
+    url: 'https://api.twitch.tv/kraken/channels/' + roomId,
+    method: 'PUT',
+    headers: {
+      Accept: 'application/vnd.twitchtv.v5+json',
+      Authorization: 'OAuth ' + config.get('bot.oauth_token'),
+      'Client-ID': config.get('bot.client_id'),
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(streamObject)
+  }, (err, res, body) => {
+    if (err) return
+
+    client.say(channel, `Установлена категория - ${game}`)
   })
 }
 
@@ -375,8 +285,8 @@ const title = (channel, roomId, args) => {
 
   if (args.length === 0) return
 
-  const title = args.join(' ')
-  const streamObject = {"channel": {"status": title, "channel_feed_enabled": true}}
+  const status = args.join(' ')
+  const streamObject = {"channel": { status, "channel_feed_enabled": true }}
 
   checkSettings(channel, 'changetitle').then(bool => {
     if (bool) {
@@ -395,7 +305,7 @@ const title = (channel, roomId, args) => {
 
         client.say(channel, `Установлено название стрима: ${title}`)
       })
-    } else client.say(channel, 'Возможность менять название стрима командой выключена.')
+    } else client.say(channel, 'Возможность менять название стрима командой выключена!')
   })
 }
 
@@ -412,7 +322,7 @@ const poll = (channel, args) => {
       const options = str.split(' | ')
       const pollObject = { title, options }
 
-      if (options.length < 2) return client.say(channel, 'Команда введена неверно')
+      if (options.length < 2) return client.say(channel, 'Команда введена неверно!')
 
       request({
         url: 'https://www.strawpoll.me/api/v2/polls',
@@ -427,10 +337,10 @@ const poll = (channel, args) => {
         if (res && res.statusCode === 200) {
           const data = JSON.parse(body)
 
-          client.action(channel, `${title} - голосовать тут https://www.strawpoll.me/${data.id}`)
+          client.action(channel, `${title} - Голосовать тут https://www.strawpoll.me/${data.id}`)
         }
       })
-    } else client.say(channel, 'Возможность создавать голосования выключена.')
+    } else client.say(channel, 'Возможность создавать голосования выключена!')
   })
 }
 
