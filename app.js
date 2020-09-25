@@ -22,12 +22,12 @@ const xssFilter = require('x-xss-protection')
 
 const Mongoose = require('mongoose')
 require(path.join(__dirname, 'modules', 'DB'))
-const UserDB = require(path.join(__dirname, 'modules', 'UserDB'))
-// const CommandDB = require(path.join(__dirname, 'modules', 'CommandDB'))
-const BadWordsDB = require(path.join(__dirname, 'modules', 'BadWordsDB'))
-const VideosDB = require(path.join(__dirname, 'modules', 'VideosDB'))
-const InvitesDB = require(path.join(__dirname, 'modules', 'InvitesDB'))
-const EventsDB = require(path.join(__dirname, 'modules', 'EventsDB'))
+const UserDB = require(path.join(__dirname, 'modules', 'schemas', 'UserDB'))
+// const CommandDB = require(path.join(__dirname, 'modules', 'schemas', 'CommandDB'))
+const BadWordsDB = require(path.join(__dirname, 'modules', 'schemas', 'BadWordsDB'))
+const VideosDB = require(path.join(__dirname, 'modules', 'schemas', 'VideosDB'))
+const InvitesDB = require(path.join(__dirname, 'modules', 'schemas', 'InvitesDB'))
+const EventsDB = require(path.join(__dirname, 'modules', 'schemas', 'EventsDB'))
 
 const client = require(path.join(__dirname, 'modules', 'client'))
 const CommandResolver = require(path.join(__dirname, 'modules', 'CommandResolver'))
@@ -49,7 +49,7 @@ client.on('chat', (channel, user, message, self) => {
   BadWordsDB.find({ channel: channel.substr(1).toLowerCase() })
     .then(data => {
       data.map(i => {
-        if (message.includes(i.word) && i.channel === channel.substr(1).toLowerCase()) {
+        if (message.includes(i.word)) {
           client.deletemessage(channel, user.id).catch(err => console.error(err))
           client.timeout(channel, user.username, i.duration).catch(err => console.error(err))
         }

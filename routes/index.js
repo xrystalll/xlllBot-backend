@@ -3,15 +3,15 @@ const router = express.Router()
 const path = require('path')
 
 const Mongoose = require('mongoose')
-const UserDB = require(path.join(__dirname, '..', 'modules', 'UserDB'))
-const ChannelDB = require(path.join(__dirname, '..', 'modules', 'ChannelDB'))
-const CommandDB = require(path.join(__dirname, '..', 'modules', 'CommandDB'))
-const BadWordsDB = require(path.join(__dirname, '..', 'modules', 'BadWordsDB'))
-const SettingsDB = require(path.join(__dirname, '..', 'modules', 'SettingsDB'))
-const EventsDB = require(path.join(__dirname, '..', 'modules', 'EventsDB'))
-const VideosDB = require(path.join(__dirname, '..', 'modules', 'VideosDB'))
-const InvitesDB = require(path.join(__dirname, '..', 'modules', 'InvitesDB'))
-const GamesDB = require(path.join(__dirname, '..', 'modules', 'GamesDB'))
+const UserDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'UserDB'))
+const ChannelDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'ChannelDB'))
+const CommandDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'CommandDB'))
+const BadWordsDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'BadWordsDB'))
+const SettingsDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'SettingsDB'))
+const EventsDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'EventsDB'))
+const VideosDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'VideosDB'))
+const InvitesDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'InvitesDB'))
+const GamesDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'GamesDB'))
 
 // get user info
 router.get('/api/user', (req, res) => {
@@ -225,6 +225,7 @@ router.get('/api/words/add', (req, res) => {
 
       if (isNaN(duration)) return res.status(400).json({ error: 'Duration must be a number' })
       if (!word || !duration || !channel) return res.status(400).json({ error: 'Empty request' })
+      if (Number(duration) === 0) return res.status(400).json({ error: 'Duration must be greater then zero' })
 
       BadWordsDB.create({ word: word.toLowerCase(), duration, channel: channel.toLowerCase() })
         .then(data => res.json(data))
@@ -384,7 +385,7 @@ router.get('/api/games', (req, res) => {
         const defaultGames = [
           {
             game: 'Just Chatting',
-            short: 'justchatting'
+            short: 'jc'
           }, {
             game: 'Games + Demos',
             short: 'demo'

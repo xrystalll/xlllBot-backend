@@ -1,5 +1,24 @@
 const path = require('path')
-const SettingsDB = require(path.join(__dirname, 'SettingsDB'))
+const SettingsDB = require(path.join(__dirname, 'schemas', 'SettingsDB'))
+
+const parseCommand = (message = '') => {
+  const regex = /!(.*?)$/gm
+  const fullCommand = regex.exec(message)
+
+  if (fullCommand) {
+    const splittedCommand = fullCommand[1].split(' ')
+    const command = splittedCommand[0]
+
+    splittedCommand.shift()
+
+    return {
+      command,
+      args: splittedCommand
+    }
+  }
+
+  return false
+}
 
 const checkSettings = (channel, settName) => {
   return SettingsDB.findOne({ channel: channel.toLowerCase(), name: settName })
@@ -33,4 +52,4 @@ const timeFormat = (date) => {
 
 const checkUrl = (url) => url.match(/(https?:\/\/[^\s]+)/g) != null;
 
-module.exports = { checkSettings, declOfNum, timeFormat, checkUrl }
+module.exports = { parseCommand, checkSettings, declOfNum, timeFormat, checkUrl }

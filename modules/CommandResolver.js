@@ -1,31 +1,13 @@
 const path = require('path')
 const Commands = require(path.join(__dirname, 'Commands'))
+const { parseCommand } = require(path.join(__dirname, 'Utils'))
 
 const CommandResolver = (channel, user, message, io) => {
-  const command = recognizeCommand(message)
+  const command = parseCommand(message)
 
   if (!command) return
 
   Commands.call(command, { channel, user, message }, io)
-}
-
-const recognizeCommand = (message) => {
-  const regex = /!(.*?)$/gm
-  const fullCommand = regex.exec(message)
-
-  if (fullCommand) {
-    const splittedCommand = fullCommand[1].split(' ')
-    const command = splittedCommand[0]
-
-    splittedCommand.shift()
-
-    return {
-      command,
-      args: splittedCommand
-    }
-  }
-
-  return false
 }
 
 module.exports = {
