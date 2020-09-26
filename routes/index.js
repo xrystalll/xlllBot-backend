@@ -329,6 +329,41 @@ router.get('/api/settings/all', (req, res) => {
                 state: true,
                 description: 'Создание голосования командой',
                 channel: channel.toLowerCase()
+              }, {
+                name: 'subscription',
+                state: true,
+                description: 'Уведомлять в чате о новый подписке',
+                channel: channel.toLowerCase()
+              }, {
+                name: 'resub',
+                state: true,
+                description: 'Уведомлять в чате о переподписке',
+                channel: channel.toLowerCase()
+              }, {
+                name: 'subgift',
+                state: true,
+                description: 'Уведомлять в чате о подарочной подписке',
+                channel: channel.toLowerCase()
+              }, {
+                name: 'giftpaidupgrade',
+                state: true,
+                description: 'Уведомлять в чате о продлении подарочной подписки',
+                channel: channel.toLowerCase()
+              }, {
+                name: 'anongiftpaidupgrade',
+                state: true,
+                description: 'Уведомлять в чате о продлении анонимной подарочной подписки',
+                channel: channel.toLowerCase()
+              }, {
+                name: 'raided',
+                state: true,
+                description: 'Уведомлять в чате о рейде',
+                channel: channel.toLowerCase()
+              }, {
+                name: 'cheer',
+                state: true,
+                description: 'Уведомлять в чате о донате битс',
+                channel: channel.toLowerCase()
               }
             ]
             SettingsDB.insertMany(defaultSettings)

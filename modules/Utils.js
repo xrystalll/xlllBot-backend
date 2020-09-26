@@ -6,15 +6,11 @@ const parseCommand = (message = '') => {
   const fullCommand = regex.exec(message)
 
   if (fullCommand) {
-    const splittedCommand = fullCommand[1].split(' ')
-    const command = splittedCommand[0]
+    const args = fullCommand[1].split(' ')
+    const command = args[0]
+    args.shift()
 
-    splittedCommand.shift()
-
-    return {
-      command,
-      args: splittedCommand
-    }
+    return { command, args }
   }
 
   return false

@@ -94,7 +94,9 @@ client.on('subscription', (channel, user, method, message, userstate) => {
   }
   const text = `@${user} спасибо за${prime ? ' Twitch Prime' : ''} подписку${plan || ''} Kreygasm`
   const event = `${user} осуществляет подписку${plan || ''}${prime ? ' с помощью Twitch Prime' : ''}`
-  client.say(channel, text)
+  checkSettings(channel.substr(1), 'subscription').then(bool => {
+    if (bool) client.say(channel, text)
+  })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
@@ -117,14 +119,18 @@ client.on('resub', (channel, user, months, message, userstate, method) => {
   if (cumulativeMonths) {
     const text = `@${user} спасибо за ${cumulativeMonths} ${declOfNum(cumulativeMonths, ['месяц', 'месяца', 'месяцев'])} переподписки${plan || ''} Kreygasm`
     const event = `${user} осуществляет переподписку${plan || ''} сроком ${cumulativeMonths} ${declOfNum(cumulativeMonths, ['месяц', 'месяца', 'месяцев'])}`
-    client.say(channel, text)
+    checkSettings(channel.substr(1), 'resub').then(bool => {
+      if (bool) client.say(channel, text)
+    })
     EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
       .then(data => io.sockets.emit('new_event', data))
       .catch(err => console.error(err))
   } else {
     const text = `@${user} спасибо за переподписку${plan || ''} Kreygasm`
     const event = `${user} осуществляет переподписку${plan || ''}`
-    client.say(channel, text)
+    checkSettings(channel.substr(1), 'resub').then(bool => {
+      if (bool) client.say(channel, text)
+    })
     EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
       .then(data => io.sockets.emit('new_event', data))
       .catch(err => console.error(err))
@@ -147,7 +153,9 @@ client.on('subgift', (channel, user, streakMonths, recipient, method, userstate)
   }
   const text = `${user} дарит подписку${plan || ''} @${recipientUser} PogChamp`
   const event = `${user} дарит подписку${plan || ''} @${recipientUser}`
-  client.say(channel, text)
+  checkSettings(channel.substr(1), 'subgift').then(bool => {
+    if (bool) client.say(channel, text)
+  })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
@@ -157,7 +165,9 @@ client.on('subgift', (channel, user, streakMonths, recipient, method, userstate)
 client.on('giftpaidupgrade', (channel, user, sender, userstate) => {
   const text = `${user} продлевает подарочную подписку Kreygasm`
   const event = `${user} продлевает подарочную подписку`
-  client.say(channel, text)
+  checkSettings(channel.substr(1), 'giftpaidupgrade').then(bool => {
+    if (bool) client.say(channel, text)
+  })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
@@ -167,7 +177,9 @@ client.on('giftpaidupgrade', (channel, user, sender, userstate) => {
 client.on('anongiftpaidupgrade', (channel, user, userstate) => {
   const text = `@${user} спасибо за переподписку Kreygasm`
   const event = `${user} продлевает анонимную подарочную подписку`
-  client.say(channel, text)
+  checkSettings(channel.substr(1), 'anongiftpaidupgrade').then(bool => {
+    if (bool) client.say(channel, text)
+  })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
@@ -177,7 +189,9 @@ client.on('anongiftpaidupgrade', (channel, user, userstate) => {
 client.on('raided', (channel, user, viewers) => {
   const text = `twitchRaid ${user} и его ${viewers} ${declOfNum(viewers, ['зритель', 'зрителя', 'зрителей'])} проводят рейд twitchRaid`
   const event = `${user} и его ${viewers} ${declOfNum(viewers, ['зритель', 'зрителя', 'зрителей'])} проводят рейд`
-  client.say(channel, text)
+  checkSettings(channel.substr(1), 'raided').then(bool => {
+    if (bool) client.say(channel, text)
+  })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
@@ -187,7 +201,9 @@ client.on('raided', (channel, user, viewers) => {
 client.on('cheer', (channel, userstate, message) => {
   const text = `${userstate['display-name']} Cпасибо за ${userstate.bits} ${declOfNum(userstate.bits, ['битс', 'битса', 'битс'])} TehePelo`
   const event = `${userstate['display-name']} дарит ${userstate.bits} ${declOfNum(userstate.bits, ['битс', 'битса', 'битс'])}`
-  client.say(channel, text)
+  checkSettings(channel.substr(1), 'cheer').then(bool => {
+    if (bool) client.say(channel, text)
+  })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
