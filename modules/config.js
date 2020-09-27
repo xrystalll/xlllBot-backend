@@ -1,7 +1,7 @@
 const config = require('config')
 const path = require('path')
 
-const ChannelDB = require(path.join(__dirname, 'schemas', 'ChannelDB'))
+const ChannelDB = require(path.join(__dirname, 'models', 'ChannelDB'))
 const channels = []
 
 ChannelDB.find()

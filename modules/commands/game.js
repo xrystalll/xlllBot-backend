@@ -2,7 +2,7 @@ const config = require('config')
 const path = require('path')
 const { checkSettings } = require(path.join(__dirname, '..', 'Utils'))
 const client = require(path.join(__dirname, '..', 'client'))
-const GamesDB = require(path.join(__dirname, '..', 'schemas', 'GamesDB'))
+const GamesDB = require(path.join(__dirname, '..', 'models', 'GamesDB'))
 const request = require('request')
 
 const game = (channel, roomId, args) => {

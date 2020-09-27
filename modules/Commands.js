@@ -1,7 +1,7 @@
 const path = require('path')
 const client = require(path.join(__dirname, 'client'))
 
-const CommandDB = require(path.join(__dirname, 'schemas', 'CommandDB'))
+const CommandDB = require(path.join(__dirname, 'models', 'CommandDB'))
 
 const { upTime } = require(path.join(__dirname, 'commands', 'upTime'))
 const { old } = require(path.join(__dirname, 'commands', 'old'))

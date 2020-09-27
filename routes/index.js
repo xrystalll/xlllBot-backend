@@ -3,15 +3,17 @@ const router = express.Router()
 const path = require('path')
 
 const Mongoose = require('mongoose')
-const UserDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'UserDB'))
-const ChannelDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'ChannelDB'))
-const CommandDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'CommandDB'))
-const BadWordsDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'BadWordsDB'))
-const SettingsDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'SettingsDB'))
-const EventsDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'EventsDB'))
-const VideosDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'VideosDB'))
-const InvitesDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'InvitesDB'))
-const GamesDB = require(path.join(__dirname, '..', 'modules', 'schemas', 'GamesDB'))
+const UserDB = require(path.join(__dirname, '..', 'modules', 'models', 'UserDB'))
+const ChannelDB = require(path.join(__dirname, '..', 'modules', 'models', 'ChannelDB'))
+const CommandDB = require(path.join(__dirname, '..', 'modules', 'models', 'CommandDB'))
+const BadWordsDB = require(path.join(__dirname, '..', 'modules', 'models', 'BadWordsDB'))
+const SettingsDB = require(path.join(__dirname, '..', 'modules', 'models', 'SettingsDB'))
+const EventsDB = require(path.join(__dirname, '..', 'modules', 'models', 'EventsDB'))
+const VideosDB = require(path.join(__dirname, '..', 'modules', 'models', 'VideosDB'))
+const InvitesDB = require(path.join(__dirname, '..', 'modules', 'models', 'InvitesDB'))
+const GamesDB = require(path.join(__dirname, '..', 'modules', 'models', 'GamesDB'))
+
+const client = require(path.join(__dirname, '..', 'modules', 'client'))
 
 // get user info
 router.get('/api/user', (req, res) => {
@@ -29,6 +31,32 @@ router.get('/api/user', (req, res) => {
 
   UserDB.findOne({ login: user, hash: token })
     .then(data => res.json(data))
+    .catch(error => res.status(401).json({ error: 'Access Denied' }))
+}),
+
+router.get('/api/user/mods', (req, res) => {
+  const auth = req.get('authorization')
+
+  if (!auth) {
+    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
+    return res.status(401).json({ error: 'Need authorization' })
+  }
+
+  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
+  const [user, token] = credentials
+
+  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
+
+  UserDB.findOne({ login: user, hash: token })
+    .then(data => {
+      const channel = data.login
+
+      if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
+
+      client.mods(channel)
+        .then(data => res.json(data))
+        .catch(error => res.status(500).json({ error: 'Unable to get list of moderators' }))
+    })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 

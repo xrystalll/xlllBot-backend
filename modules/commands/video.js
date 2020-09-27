@@ -1,7 +1,7 @@
 const path = require('path')
 const { checkSettings } = require(path.join(__dirname, '..', 'Utils'))
 const client = require(path.join(__dirname, '..', 'client'))
-const VideosDB = require(path.join(__dirname, '..', 'schemas', 'VideosDB'))
+const VideosDB = require(path.join(__dirname, '..', 'models', 'VideosDB'))
 const ytInfo = require('youtube-info')
 
 const addVideo = (channel, state, args, io) => {
@@ -71,9 +71,7 @@ const addVideo = (channel, state, args, io) => {
 }
 
 const skipVideo = (channel, io) => {
-  checkSettings(channel, 'songrequest').then(bool => {
-    if (bool) io.sockets.emit('skip', { channel: channel.toLowerCase() })
-  })
+  if (bool) io.sockets.emit('skip', { channel: channel.toLowerCase() })
 }
 
 module.exports = { addVideo, skipVideo }

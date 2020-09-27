@@ -1,5 +1,5 @@
 const path = require('path')
-const SettingsDB = require(path.join(__dirname, 'schemas', 'SettingsDB'))
+const SettingsDB = require(path.join(__dirname, 'models', 'SettingsDB'))
 
 const parseCommand = (message = '') => {
   const regex = /!(.*?)$/gm
