@@ -15,40 +15,65 @@ const GamesDB = require(path.join(__dirname, '..', 'modules', 'models', 'GamesDB
 
 const client = require(path.join(__dirname, '..', 'modules', 'client'))
 
-// get user info
-router.get('/api/user', (req, res) => {
+const isAuthenticated = (req, res) => new Promise((resolve, reject) => {
   const auth = req.get('authorization')
 
   if (!auth) {
     res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
+    reject(null, true)
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
   const [user, token] = credentials
 
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
+  if (!token && !user) reject(null, true)
 
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => res.json(data))
+  return UserDB.findOne({ login: user, hash: token })
+    .then(data => resolve(data, false))
+    .catch(error => reject(null, true))
+})
+
+// get user info
+router.get('/api/user', (req, res) => {
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
+
+      res.json(data)
+    })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
-router.get('/api/user/mods', (req, res) => {
-  const auth = req.get('authorization')
+// channels api
+router.get('/api/channel', (req, res) => {
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
+      const channel = data.login
 
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
+      if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
+      ChannelDB.find({ name: channel })
+        .then(data => {
+          if (data.length) {
+            res.json(data)
+          } else {
+            ChannelDB.create({ name: channel })
+              .then(output => res.json([output]))
+              .catch(error => res.status(500).json({ error }))
+          }
+        })
+        .catch(error => res.status(500).json({ error }))
+    })
+    .catch(error => res.status(401).json({ error: 'Access Denied' }))
+}),
 
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
+router.get('/api/channel/mods', (req, res) => {
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
+
       const channel = data.login
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
@@ -60,111 +85,88 @@ router.get('/api/user/mods', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
+// bot
+router.get('/api/bot/join', (req, res) => {
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-// channels api
-router.get('/api/channel', (req, res) => {
-  const auth = req.get('authorization')
-
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
-      ChannelDB.find({ name: channel.toLowerCase() })
+      client.join(channel)
         .then(data => {
-          if (data.length) {
-            res.json(data)
-          } else {
-            ChannelDB.create({ name: channel.toLowerCase() })
-              .then(output => res.json([output]))
-              .catch(error => res.status(500).json({ error }))
-          }
+          ChannelDB.updateOne({ name: channel }, { bot_active: true })
+            .then(() => {
+              res.json({ message: 'Bot joined to chat: ' + data.join() })
+            })
         })
-        .catch(error => res.status(401).json({ error: 'Access Denied' }))
+        .catch(error => res.status(500).json({ error: 'Unable join to chat' }))
+    })
+    .catch(error => res.status(401).json({ error: 'Access Denied' }))
+}),
+
+router.get('/api/bot/leave', (req, res) => {
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
+
+      const channel = data.login
+
+      if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
+
+      client.part(channel)
+        .then(data => {
+          ChannelDB.updateOne({ name: channel }, { bot_active: false })
+            .then(() => {
+              res.json({ message: 'Bot left chat: ' + data.join() })
+            })
+        })
+        .catch(error => res.status(500).json({ error: 'Unable to leave from chat' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
 // commands api
 router.get('/api/commands/all', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
-      CommandDB.find({ channel: channel.toLowerCase() })
+      CommandDB.find({ channel })
         .then(data => res.json(data))
-        .catch(error => res.status(401).json({ error: 'Access Denied' }))
+        .catch(error => res.status(500).json({ error: 'Unable to get list of commands' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
 router.get('/api/commands/add', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
       const { tag, text } = req.query
 
       if (!tag || !text || !channel) return res.status(400).json({ error: 'Empty request' })
 
-      CommandDB.create({ tag, text, channel: channel.toLowerCase() })
+      CommandDB.create({ tag, text, channel })
         .then(data => res.json(data))
-        .catch(error => res.status(500).json({ error }))
+        .catch(error => res.status(500).json({ error: 'Unable to add command' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
 router.get('/api/commands/edit', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
       const { id, tag, text } = req.query
 
@@ -172,35 +174,25 @@ router.get('/api/commands/edit', (req, res) => {
 
       CommandDB.updateOne({ _id: Mongoose.Types.ObjectId(id) }, { tag, text })
         .then(() => res.json({ success: true }))
-        .catch(error => res.status(500).json({ error }))
+        .catch(error => res.status(500).json({ error: 'Unable to edit command' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
 router.get('/api/commands/delete', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
       const { id } = req.query
 
       if (!id) return res.status(400).json({ error: 'Empty request' })
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
-      CommandDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel: channel.toLowerCase() })
+      CommandDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel })
         .then(data => res.json({ success: true, deletedCount: data.deletedCount }))
-        .catch(error => res.status(500).json({ error }))
+        .catch(error => res.status(500).json({ error: 'Unable to delete command' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
@@ -208,46 +200,26 @@ router.get('/api/commands/delete', (req, res) => {
 
 // badWords api
 router.get('/api/words/all', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
-      BadWordsDB.find({ channel: channel.toLowerCase() })
+      BadWordsDB.find({ channel })
         .then(data => res.json(data))
-        .catch(error => res.status(401).json({ error: 'Access Denied' }))
+        .catch(error => res.status(500).json({ error: 'Unable to get list of badwords' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
 router.get('/api/words/add', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
       const { word, duration } = req.query
 
@@ -255,37 +227,27 @@ router.get('/api/words/add', (req, res) => {
       if (!word || !duration || !channel) return res.status(400).json({ error: 'Empty request' })
       if (Number(duration) === 0) return res.status(400).json({ error: 'Duration must be greater then zero' })
 
-      BadWordsDB.create({ word: word.toLowerCase(), duration, channel: channel.toLowerCase() })
+      BadWordsDB.create({ word: word.toLowerCase(), duration, channel })
         .then(data => res.json(data))
-        .catch(error => res.status(500).json({ error }))
+        .catch(error => res.status(500).json({ error: 'Unable to add badword' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
 router.get('/api/words/delete', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
       const { id } = req.query
 
       if (!id) return res.status(400).json({ error: 'Empty request' })
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
-      BadWordsDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel: channel.toLowerCase() })
+      BadWordsDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel })
         .then(data => res.json({ success: true, deletedCount: data.deletedCount }))
-        .catch(error => res.status(500).json({ error }))
+        .catch(error => res.status(500).json({ error: 'Unable to delete badword' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
@@ -293,25 +255,15 @@ router.get('/api/words/delete', (req, res) => {
 
 // settings api
 router.get('/api/settings/all', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
-      SettingsDB.find({ channel: channel.toLowerCase() })
+      SettingsDB.find({ channel })
         .then(data => {
           if (data.length) {
             res.json(data)
@@ -321,77 +273,77 @@ router.get('/api/settings/all', (req, res) => {
                 name: 'pingpong',
                 state: true,
                 description: 'Мини-игра пинг понг',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'cocksize',
                 state: true,
                 description: 'Мини-игра "Размер..."',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'links',
                 state: true,
                 description: 'Запретить писать ссылки в чат ансабам. Удаление сообщения и таймаут на 10 секунд',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'songforunsub',
                 state: false,
                 description: 'Разрешить заказ видео ансабам',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'songrequest',
                 state: true,
                 description: 'Заказ видео в чате',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'changegame',
                 state: true,
                 description: 'Смена категории стрима командой',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'changetitle',
                 state: true,
                 description: 'Смена названия стрима командой',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'poll',
                 state: true,
                 description: 'Создание голосования командой',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'subscription',
                 state: true,
                 description: 'Уведомлять в чате о новый подписке',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'resub',
                 state: true,
                 description: 'Уведомлять в чате о переподписке',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'subgift',
                 state: true,
                 description: 'Уведомлять в чате о подарочной подписке',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'giftpaidupgrade',
                 state: true,
                 description: 'Уведомлять в чате о продлении подарочной подписки',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'anongiftpaidupgrade',
                 state: true,
                 description: 'Уведомлять в чате о продлении анонимной подарочной подписки',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'raided',
                 state: true,
                 description: 'Уведомлять в чате о рейде',
-                channel: channel.toLowerCase()
+                channel
               }, {
                 name: 'cheer',
                 state: true,
                 description: 'Уведомлять в чате о донате битс',
-                channel: channel.toLowerCase()
+                channel
               }
             ]
             SettingsDB.insertMany(defaultSettings)
@@ -399,40 +351,24 @@ router.get('/api/settings/all', (req, res) => {
               .catch(error => res.status(500).json({ error }))
           }
         })
-        .catch(error => res.status(401).json({ error: 'Access Denied' }))
+        .catch(error => res.status(500).json({ error: 'Unable to get list of settings' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
 router.get('/api/settings', (req, res) => {
-  const auth = req.get('authorization')
+  isAuthenticated(req, res)
+    .then((data, err) => {
+      if (err) throw Error
 
-  if (!auth) {
-    res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    return res.status(401).json({ error: 'Need authorization' })
-  }
-
-  const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
-
-  if (!token && !user) return res.status(401).json({ error: 'Access Denied' })
-
-  UserDB.findOne({ login: user, hash: token })
-    .then(data => {
       const channel = data.login
       const { name, state } = req.query
 
       if (!name || !state || !channel) return res.status(400).json({ error: 'Empty request' })
 
-      SettingsDB.find({ name })
-        .then(data => {
-          if (data.length) {
-            SettingsDB.updateOne({ name, channel: channel.toLowerCase() }, { state })
-              .then(() => res.json({ success: true }))
-              .catch(error => res.status(500).json({ error }))
-          } else res.status(400).json({ error: 'Setting does not exist' })
-        })
-        .catch(error => res.status(401).json({ error: 'Access Denied' }))
+      SettingsDB.updateOne({ name, channel }, { state })
+        .then(() => res.json({ success: true }))
+        .catch(error => res.status(500).json({ error: 'Unable to save setting' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
@@ -600,7 +536,7 @@ router.get('/api/games', (req, res) => {
           .catch(error => res.status(500).json({ error }))
       }
     })
-    .catch(error => res.status(500).json({ error }))
+    .catch(error => res.status(500).json({ error: 'Unable to get list of games' }))
 }),
 
 
@@ -609,9 +545,9 @@ router.get('/api/invite/add', (req, res) => {
 
   if (!channel) return res.status(400).json({ error: 'Empty request' })
 
-  InvitesDB.findOrCreate({ channel: channel.toLowerCase() })
+  InvitesDB.findOrCreate({ channel })
     .then(data => res.json(data))
-    .catch(error => res.status(500).json({ error }))
+    .catch(error => res.status(500).json({ error: 'Unable to create invite' }))
 }),
 
 router.get('*', (req, res) => {
