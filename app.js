@@ -34,11 +34,13 @@ const CommandResolver = require(path.join(__dirname, 'modules', 'CommandResolver
 
 client.connect()
 
-client.on('chat', (channel, user, message, self) => {
+client.on('chat', (sharpChannel, user, message, self) => {
   if (self) return
 
-  if (message.indexOf('!sr') === -1 && !user.subscriber && !user.mod && user.username !== channel.substr(1).toLowerCase() && checkUrl(message)) {
-    checkSettings(channel.substr(1), 'links').then(bool => {
+  const channel = sharpChannel.toLowerCase().replace('#', '')
+
+  if (message.indexOf('!sr') === -1 && !user.subscriber && !user.mod && user.username !== channel && checkUrl(message)) {
+    checkSettings(channel, 'links').then(bool => {
       if (bool) {
         client.deletemessage(channel, user.id).catch(err => console.error(err))
         client.timeout(channel, user.username, '10').catch(err => console.error(err))
@@ -46,7 +48,7 @@ client.on('chat', (channel, user, message, self) => {
     })
   }
 
-  BadWordsDB.find({ channel: channel.substr(1).toLowerCase() })
+  BadWordsDB.find({ channel })
     .then(data => {
       data.map(i => {
         if (message.includes(i.word)) {
@@ -94,7 +96,7 @@ client.on('subscription', (channel, user, method, message, userstate) => {
   }
   const text = `@${user} спасибо за${prime ? ' Twitch Prime' : ''} подписку${plan || ''} Kreygasm`
   const event = `${user} осуществляет подписку${plan || ''}${prime ? ' с помощью Twitch Prime' : ''}`
-  checkSettings(channel.substr(1), 'subscription').then(bool => {
+  checkSettings(channel, 'subscription').then(bool => {
     if (bool) client.say(channel, text)
   })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
@@ -119,7 +121,7 @@ client.on('resub', (channel, user, months, message, userstate, method) => {
   if (cumulativeMonths) {
     const text = `@${user} спасибо за ${cumulativeMonths} ${declOfNum(cumulativeMonths, ['месяц', 'месяца', 'месяцев'])} переподписки${plan || ''} Kreygasm`
     const event = `${user} осуществляет переподписку${plan || ''} сроком ${cumulativeMonths} ${declOfNum(cumulativeMonths, ['месяц', 'месяца', 'месяцев'])}`
-    checkSettings(channel.substr(1), 'resub').then(bool => {
+    checkSettings(channel, 'resub').then(bool => {
       if (bool) client.say(channel, text)
     })
     EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
@@ -128,7 +130,7 @@ client.on('resub', (channel, user, months, message, userstate, method) => {
   } else {
     const text = `@${user} спасибо за переподписку${plan || ''} Kreygasm`
     const event = `${user} осуществляет переподписку${plan || ''}`
-    checkSettings(channel.substr(1), 'resub').then(bool => {
+    checkSettings(channel, 'resub').then(bool => {
       if (bool) client.say(channel, text)
     })
     EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
@@ -153,7 +155,7 @@ client.on('subgift', (channel, user, streakMonths, recipient, method, userstate)
   }
   const text = `${user} дарит подписку${plan || ''} @${recipientUser} PogChamp`
   const event = `${user} дарит подписку${plan || ''} @${recipientUser}`
-  checkSettings(channel.substr(1), 'subgift').then(bool => {
+  checkSettings(channel, 'subgift').then(bool => {
     if (bool) client.say(channel, text)
   })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
@@ -165,7 +167,7 @@ client.on('subgift', (channel, user, streakMonths, recipient, method, userstate)
 client.on('giftpaidupgrade', (channel, user, sender, userstate) => {
   const text = `${user} продлевает подарочную подписку Kreygasm`
   const event = `${user} продлевает подарочную подписку`
-  checkSettings(channel.substr(1), 'giftpaidupgrade').then(bool => {
+  checkSettings(channel, 'giftpaidupgrade').then(bool => {
     if (bool) client.say(channel, text)
   })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
@@ -177,7 +179,7 @@ client.on('giftpaidupgrade', (channel, user, sender, userstate) => {
 client.on('anongiftpaidupgrade', (channel, user, userstate) => {
   const text = `@${user} спасибо за переподписку Kreygasm`
   const event = `${user} продлевает анонимную подарочную подписку`
-  checkSettings(channel.substr(1), 'anongiftpaidupgrade').then(bool => {
+  checkSettings(channel, 'anongiftpaidupgrade').then(bool => {
     if (bool) client.say(channel, text)
   })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
@@ -189,7 +191,7 @@ client.on('anongiftpaidupgrade', (channel, user, userstate) => {
 client.on('raided', (channel, user, viewers) => {
   const text = `twitchRaid ${user} и его ${viewers} ${declOfNum(viewers, ['зритель', 'зрителя', 'зрителей'])} проводят рейд twitchRaid`
   const event = `${user} и его ${viewers} ${declOfNum(viewers, ['зритель', 'зрителя', 'зрителей'])} проводят рейд`
-  checkSettings(channel.substr(1), 'raided').then(bool => {
+  checkSettings(channel, 'raided').then(bool => {
     if (bool) client.say(channel, text)
   })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
@@ -201,7 +203,7 @@ client.on('raided', (channel, user, viewers) => {
 client.on('cheer', (channel, userstate, message) => {
   const text = `${userstate['display-name']} Cпасибо за ${userstate.bits} ${declOfNum(userstate.bits, ['битс', 'битса', 'битс'])} TehePelo`
   const event = `${userstate['display-name']} дарит ${userstate.bits} ${declOfNum(userstate.bits, ['битс', 'битса', 'битс'])}`
-  checkSettings(channel.substr(1), 'cheer').then(bool => {
+  checkSettings(channel, 'cheer').then(bool => {
     if (bool) client.say(channel, text)
   })
   EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
@@ -306,11 +308,11 @@ app.use('/', routes),
 
 io.on('connection', (socket) => {
   socket.on('video_items', (data) => {
-    const channel = data.channel
+    const { channel } = data
 
     if (!channel) return socket.emit('alert', { message: 'Channel does not exist', type: 'error' })
 
-    VideosDB.find({ channel: channel.toLowerCase() })
+    VideosDB.find({ channel })
       .then(data => socket.emit('output_videos', data))
       .catch(() => socket.emit('alert', { message: 'Failed to output all videos', type: 'error' }))
   }),
@@ -320,7 +322,7 @@ io.on('connection', (socket) => {
 
     if (!id && !channel) return socket.emit('alert', { message: 'Channel does not exist', type: 'error' })
 
-    VideosDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel: channel.toLowerCase() })
+    VideosDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel })
       .then(() => socket.emit('deteted', { id }))
       .catch(() => socket.emit('alert', { message: 'Failed to delete video', type: 'error' }))
   }),
@@ -330,17 +332,17 @@ io.on('connection', (socket) => {
 
     if (!channel) return socket.emit('alert', { message: 'Channel does not exist', type: 'error' })
 
-    EventsDB.find({ channel: channel.toLowerCase() })
+    EventsDB.find({ channel })
       .then(data => socket.emit('output_events', data))
       .catch(() => socket.emit('alert', { message: 'Failed to output all events', type: 'error' }))
   }),
 
   socket.on('delete_events', (data) => {
-    const channel = data.channel
+    const { channel } = data
 
     if (!channel) return socket.emit('alert', { message: 'Channel does not exist', type: 'error' })
 
-    EventsDB.deleteMany({ channel: channel.toLowerCase(), time: { $lt: (Date.now() - 86400 * 1000).toString() } })
+    EventsDB.deleteMany({ channel, time: { $lt: (Date.now() - 86400 * 1000).toString() } })
       .then(data => socket.emit('events_deleted', { deletedCount: data.deletedCount }))
       .catch(error => socket.emit('alert', { message: 'Failed to output all events', type: 'error' }))
   })

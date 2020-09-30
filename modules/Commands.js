@@ -14,9 +14,9 @@ const { poll } = require(path.join(__dirname, 'commands', 'poll'))
 
 let state = null
 
-const CallCommand = (command, messageInfo, io) => {
-  state = messageInfo
-  const channel = state.channel.substr(1)
+const CallCommand = (command, messageObj, io) => {
+  state = messageObj
+  const channel = state.channel
 
   CommandDB.find({ tag: command.command, channel })
     .then(data => {
@@ -41,7 +41,7 @@ const CallCommand = (command, messageInfo, io) => {
       pingPong(channel, state.user.username)
       break
     case 'size':
-      cockSize(channel, state, command.args)
+      cockSize(channel, state.user.username, command.args)
       break
     case 'sr':
       addVideo(channel, state, command.args, io)
@@ -82,11 +82,11 @@ const CallCommand = (command, messageInfo, io) => {
   }
 }
 
-const checkBroadcasterPermission = () => state.user.username === state.channel.substr(1)
-const checkModeratorPermission = () => state.user.mod || state.user.username === state.channel.substr(1)
+const checkBroadcasterPermission = () => state.user.username === state.channel
+const checkModeratorPermission = () => state.user.mod || state.user.username === state.channel
 
 module.exports = {
-  call: (command, messageInfo, io) => {
-    CallCommand(command, messageInfo, io)
+  call: (command, messageObj, io) => {
+    CallCommand(command, messageObj, io)
   }
 }

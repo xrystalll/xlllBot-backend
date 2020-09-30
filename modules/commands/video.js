@@ -2,7 +2,7 @@ const path = require('path')
 const { checkSettings } = require(path.join(__dirname, '..', 'Utils'))
 const client = require(path.join(__dirname, '..', 'client'))
 const VideosDB = require(path.join(__dirname, '..', 'models', 'VideosDB'))
-const ytInfo = require('youtube-info')
+const ytInfo = require('updated-youtube-info')
 
 const addVideo = (channel, state, args, io) => {
   checkSettings(channel, 'songrequest').then(bool => {
@@ -26,14 +26,16 @@ const addVideo = (channel, state, args, io) => {
           ytInfo(ytId)
             .then(ytData => {
               const vidObj = {
-                url,
-                channel: channel.toLowerCase(),
+                yid: ytData.videoId, 
+                url: ytData.url,
+                channel,
                 title: ytData.title,
                 owner: ytData.owner,
                 views: ytData.views,
                 duration: ytData.duration,
                 thumb: ytData.thumbnailUrl
               }
+
               VideosDB.create(vidObj)
                 .then(data => {
                   io.sockets.emit('new_video', data)
@@ -43,18 +45,20 @@ const addVideo = (channel, state, args, io) => {
             })
             .catch(() => console.error('Video does exist'))
         } else {
-          if (state.subscriber || state.mod || state.user.username === channel.toLowerCase()) {
+          if (state.subscriber || state.mod || state.user.username === channel) {
             ytInfo(ytId)
               .then(ytData => {
                 const vidObj = {
-                  url,
-                  channel: channel.toLowerCase(),
+                  yid: ytData.videoId, 
+                  url: ytData.url,
+                  channel,
                   title: ytData.title,
                   owner: ytData.owner,
                   views: ytData.views,
                   duration: ytData.duration,
                   thumb: ytData.thumbnailUrl
                 }
+
                 VideosDB.create(vidObj)
                   .then(data => {
                     io.sockets.emit('new_video', data)
@@ -71,7 +75,7 @@ const addVideo = (channel, state, args, io) => {
 }
 
 const skipVideo = (channel, io) => {
-  if (bool) io.sockets.emit('skip', { channel: channel.toLowerCase() })
+  io.sockets.emit('skip', { channel })
 }
 
 module.exports = { addVideo, skipVideo }

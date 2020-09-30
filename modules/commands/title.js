@@ -25,7 +25,7 @@ const title = (channel, roomId, args) => {
       }, (err, res, body) => {
         if (err) return
 
-        client.say(channel, `Установлено название стрима: ${title}`)
+        client.say(channel, `Установлено название стрима: ${status}`)
       })
     } else client.say(channel, 'Возможность менять название стрима командой выключена!')
   })

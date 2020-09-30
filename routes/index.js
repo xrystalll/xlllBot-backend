@@ -15,29 +15,29 @@ const GamesDB = require(path.join(__dirname, '..', 'modules', 'models', 'GamesDB
 
 const client = require(path.join(__dirname, '..', 'modules', 'client'))
 
-const isAuthenticated = (req, res) => new Promise((resolve, reject) => {
+const AuthProtect = (req, res) => new Promise((resolve, reject) => {
   const auth = req.get('authorization')
 
   if (!auth) {
     res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    reject(null, true)
+    reject(null)
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
   const [user, token] = credentials
 
-  if (!token && !user) reject(null, true)
+  if (!token && !user) reject(null)
 
   return UserDB.findOne({ login: user, hash: token })
-    .then(data => resolve(data, false))
-    .catch(error => reject(null, true))
+    .then(data => resolve(data))
+    .catch(error => reject(null))
 })
 
 // get user info
 router.get('/api/user', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       res.json(data)
     })
@@ -46,9 +46,9 @@ router.get('/api/user', (req, res) => {
 
 // channels api
 router.get('/api/channel', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
 
@@ -64,15 +64,15 @@ router.get('/api/channel', (req, res) => {
               .catch(error => res.status(500).json({ error }))
           }
         })
-        .catch(error => res.status(500).json({ error }))
+        .catch(error => res.status(500).json({ error: 'Unable to get channel' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
 router.get('/api/channel/mods', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
 
@@ -87,9 +87,9 @@ router.get('/api/channel/mods', (req, res) => {
 
 // bot
 router.get('/api/bot/join', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
 
@@ -98,9 +98,8 @@ router.get('/api/bot/join', (req, res) => {
       client.join(channel)
         .then(data => {
           ChannelDB.updateOne({ name: channel }, { bot_active: true })
-            .then(() => {
-              res.json({ message: 'Bot joined to chat: ' + data.join() })
-            })
+            .then(() => res.json({ message: 'Bot joined to chat: ' + data.join() }))
+            .catch(error => res.status(500).json({ error }))
         })
         .catch(error => res.status(500).json({ error: 'Unable join to chat' }))
     })
@@ -108,9 +107,9 @@ router.get('/api/bot/join', (req, res) => {
 }),
 
 router.get('/api/bot/leave', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
 
@@ -119,9 +118,8 @@ router.get('/api/bot/leave', (req, res) => {
       client.part(channel)
         .then(data => {
           ChannelDB.updateOne({ name: channel }, { bot_active: false })
-            .then(() => {
-              res.json({ message: 'Bot left chat: ' + data.join() })
-            })
+            .then(() => res.json({ message: 'Bot left chat: ' + data.join() }))
+            .catch(error => res.status(500).json({ error }))
         })
         .catch(error => res.status(500).json({ error: 'Unable to leave from chat' }))
     })
@@ -130,9 +128,9 @@ router.get('/api/bot/leave', (req, res) => {
 
 // commands api
 router.get('/api/commands/all', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
 
@@ -146,9 +144,9 @@ router.get('/api/commands/all', (req, res) => {
 }),
 
 router.get('/api/commands/add', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
       const { tag, text } = req.query
@@ -163,9 +161,9 @@ router.get('/api/commands/add', (req, res) => {
 }),
 
 router.get('/api/commands/edit', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
       const { id, tag, text } = req.query
@@ -180,9 +178,9 @@ router.get('/api/commands/edit', (req, res) => {
 }),
 
 router.get('/api/commands/delete', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
       const { id } = req.query
@@ -200,9 +198,9 @@ router.get('/api/commands/delete', (req, res) => {
 
 // badWords api
 router.get('/api/words/all', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
 
@@ -216,9 +214,9 @@ router.get('/api/words/all', (req, res) => {
 }),
 
 router.get('/api/words/add', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
       const { word, duration } = req.query
@@ -235,9 +233,9 @@ router.get('/api/words/add', (req, res) => {
 }),
 
 router.get('/api/words/delete', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
       const { id } = req.query
@@ -255,9 +253,9 @@ router.get('/api/words/delete', (req, res) => {
 
 // settings api
 router.get('/api/settings/all', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
 
@@ -357,9 +355,9 @@ router.get('/api/settings/all', (req, res) => {
 }),
 
 router.get('/api/settings', (req, res) => {
-  isAuthenticated(req, res)
-    .then((data, err) => {
-      if (err) throw Error
+  AuthProtect(req, res)
+    .then(data => {
+      if (!data) throw Error
 
       const channel = data.login
       const { name, state } = req.query
@@ -367,7 +365,7 @@ router.get('/api/settings', (req, res) => {
       if (!name || !state || !channel) return res.status(400).json({ error: 'Empty request' })
 
       SettingsDB.updateOne({ name, channel }, { state })
-        .then(() => res.json({ success: true }))
+        .then(() => res.json({ success: true, state }))
         .catch(error => res.status(500).json({ error: 'Unable to save setting' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))

@@ -17,6 +17,7 @@ const upTime = (channel, roomId) => {
 
     const data = JSON.parse(body)
     const stream = data.stream
+
     if (stream) client.say(channel, `Стрим начался ${timeFormat(stream.created_at)} назад`)
     else client.say(channel, 'Стрим оффлайн')
   })

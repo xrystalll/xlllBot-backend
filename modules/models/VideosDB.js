@@ -2,6 +2,10 @@ const Mongoose = require('mongoose')
 const Schema = Mongoose.Schema
 
 const VideosSchema = new Schema({
+  yid: {
+    type: String,
+    required: true
+  },
   url: {
     type: String,
     required: true

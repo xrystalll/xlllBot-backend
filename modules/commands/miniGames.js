@@ -8,11 +8,10 @@ const pingPong = (channel, userName) => {
   })
 }
 
-const cockSize = (channel, state, args) => {
+const cockSize = (channel, userName, args) => {
   checkSettings(channel, 'cocksize').then(bool => {
     if (bool) {
-      const userName = state.user.username
-      const targetUser = args[0]
+      const targetUser = args[0] ? args[0].replace('@', '') : null
       const size = Math.floor(Math.random() * (26 - 8)) + 8
 
       if (!targetUser) {
@@ -22,12 +21,12 @@ const cockSize = (channel, state, args) => {
           client.say(channel, `@${userName} у тебя ${size} ${declOfNum(size, ['синтиметр', 'сантиметра', 'сантиметров'])}. Не расстраивайся LUL`)
         }
       } else {
-        if (targetUser.replace('@', '') === channel) return
+        if (targetUser === channel) return
 
         if (size > 15) {
-          client.say(channel, `У ${targetUser.replace('@', '')} ${size} ${declOfNum(size, ['синтиметр', 'сантиметра', 'сантиметров'])} PogChamp`)
+          client.say(channel, `У ${targetUser} ${size} ${declOfNum(size, ['синтиметр', 'сантиметра', 'сантиметров'])} PogChamp`)
         } else {
-          client.say(channel, `У ${targetUser.replace('@', '')} ${size} ${declOfNum(size, ['синтиметр', 'сантиметра', 'сантиметров'])} LUL`)
+          client.say(channel, `У ${targetUser} ${size} ${declOfNum(size, ['синтиметр', 'сантиметра', 'сантиметров'])} LUL`)
         }
       }
     }
