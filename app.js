@@ -19,6 +19,8 @@ const request = require('request')
 const hpp = require('hpp')
 const helmet = require('helmet')
 const xssFilter = require('x-xss-protection')
+const RateLimit = require('express-rate-limit')
+const bodyParser = require('body-parser')
 
 const Mongoose = require('mongoose')
 require(path.join(__dirname, 'modules', 'DB'))
@@ -211,6 +213,13 @@ client.on('cheer', (channel, userstate, message) => {
     .catch(err => console.error(err))
 })
 
+const limiter = new RateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 50,
+  message: { error: 'Too many requests per minute' }
+})
+
+app.use('/api/', limiter),
 
 app.use(session({
   secret: config.get('auth.session'),
@@ -223,6 +232,7 @@ app.use(passport.session()),
 app.use(hpp()),
 app.use(helmet.noSniff()),
 app.use(xssFilter()),
+app.use(bodyParser.json()),
 
 app.use(cors()),
 

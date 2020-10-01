@@ -33,6 +33,7 @@ const AuthProtect = (req, res) => new Promise((resolve, reject) => {
     .catch(error => reject(null))
 })
 
+// users api
 // get user info
 router.get('/api/user', (req, res) => {
   AuthProtect(req, res)
@@ -44,7 +45,9 @@ router.get('/api/user', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
+
 // channels api
+// get channel data
 router.get('/api/channel', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
@@ -69,6 +72,7 @@ router.get('/api/channel', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
+// get moderators list
 router.get('/api/channel/mods', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
@@ -85,7 +89,9 @@ router.get('/api/channel/mods', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
+
 // bot
+// join bot to chat
 router.get('/api/bot/join', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
@@ -106,6 +112,7 @@ router.get('/api/bot/join', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
+// leave bot from chat
 router.get('/api/bot/leave', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
@@ -126,7 +133,9 @@ router.get('/api/bot/leave', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
+
 // commands api
+// get all commands
 router.get('/api/commands/all', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
@@ -143,14 +152,16 @@ router.get('/api/commands/all', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
-router.get('/api/commands/add', (req, res) => {
+// create new command
+router.put('/api/commands/add', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
       if (!data) throw Error
 
       const channel = data.login
-      const { tag, text } = req.query
+      const { tag, text } = req.body
 
+      if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
       if (!tag || !text || !channel) return res.status(400).json({ error: 'Empty request' })
 
       CommandDB.create({ tag, text, channel })
@@ -160,14 +171,16 @@ router.get('/api/commands/add', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
-router.get('/api/commands/edit', (req, res) => {
+// edit command
+router.put('/api/commands/edit', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
       if (!data) throw Error
 
       const channel = data.login
-      const { id, tag, text } = req.query
+      const { id, tag, text } = req.body
 
+      if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
       if (!id || !tag || !text || !channel) return res.status(400).json({ error: 'Empty request' })
 
       CommandDB.updateOne({ _id: Mongoose.Types.ObjectId(id) }, { tag, text })
@@ -177,16 +190,17 @@ router.get('/api/commands/edit', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
-router.get('/api/commands/delete', (req, res) => {
+// delete command
+router.put('/api/commands/delete', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
       if (!data) throw Error
 
       const channel = data.login
-      const { id } = req.query
+      const { id } = req.body
 
-      if (!id) return res.status(400).json({ error: 'Empty request' })
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
+      if (!id) return res.status(400).json({ error: 'Empty request' })
 
       CommandDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel })
         .then(data => res.json({ success: true, deletedCount: data.deletedCount }))
@@ -213,17 +227,19 @@ router.get('/api/words/all', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
-router.get('/api/words/add', (req, res) => {
+// add new word
+router.put('/api/words/add', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
       if (!data) throw Error
 
       const channel = data.login
-      const { word, duration } = req.query
+      const { word, duration } = req.body
 
-      if (isNaN(duration)) return res.status(400).json({ error: 'Duration must be a number' })
+      if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
       if (!word || !duration || !channel) return res.status(400).json({ error: 'Empty request' })
-      if (Number(duration) === 0) return res.status(400).json({ error: 'Duration must be greater then zero' })
+      if (!Number.isInteger(duration)) return res.status(400).json({ error: 'Duration must be a number' })
+      if (duration === 0) return res.status(400).json({ error: 'Duration must be greater then zero' })
 
       BadWordsDB.create({ word: word.toLowerCase(), duration, channel })
         .then(data => res.json(data))
@@ -232,16 +248,17 @@ router.get('/api/words/add', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
-router.get('/api/words/delete', (req, res) => {
+// delete word
+router.put('/api/words/delete', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
       if (!data) throw Error
 
       const channel = data.login
-      const { id } = req.query
+      const { id } = req.body
 
-      if (!id) return res.status(400).json({ error: 'Empty request' })
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
+      if (!id) return res.status(400).json({ error: 'Empty request' })
 
       BadWordsDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel })
         .then(data => res.json({ success: true, deletedCount: data.deletedCount }))
@@ -252,6 +269,7 @@ router.get('/api/words/delete', (req, res) => {
 
 
 // settings api
+// get all settings
 router.get('/api/settings/all', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
@@ -354,15 +372,18 @@ router.get('/api/settings/all', (req, res) => {
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
 
-router.get('/api/settings', (req, res) => {
+// toggle setting state
+router.put('/api/settings/toggle', (req, res) => {
   AuthProtect(req, res)
     .then(data => {
       if (!data) throw Error
 
       const channel = data.login
-      const { name, state } = req.query
+      const { name, state } = req.body
 
-      if (!name || !state || !channel) return res.status(400).json({ error: 'Empty request' })
+      if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
+      if (!name || state === undefined || !channel) return res.status(400).json({ error: 'Empty request' })
+      if (!typeof bool === 'boolean') res.status(400).json({ error: 'State must be boolean' })
 
       SettingsDB.updateOne({ name, channel }, { state })
         .then(() => res.json({ success: true, state }))
@@ -538,6 +559,7 @@ router.get('/api/games', (req, res) => {
 }),
 
 
+// invite api
 router.get('/api/invite/add', (req, res) => {
   const { channel } = req.query
 
@@ -548,6 +570,8 @@ router.get('/api/invite/add', (req, res) => {
     .catch(error => res.status(500).json({ error: 'Unable to create invite' }))
 }),
 
+
+// error 404
 router.get('*', (req, res) => {
   res.status(404).json({ error: '404 Not found' })
 })

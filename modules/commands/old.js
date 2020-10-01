@@ -8,7 +8,7 @@ const old = (channel, state, args, checkBroadcasterPermission) => {
   const userId = state.user['user-id']
   const roomId = state.user['room-id']
   const userName = state.user.username
-  const targetUser = args[0] ? args[0].replace('@', '') : undefined
+  const targetUser = args[0] ? args[0].replace('@', '') : null
 
   if (!targetUser) {
     if (checkBroadcasterPermission()) {
