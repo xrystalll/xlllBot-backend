@@ -18,6 +18,7 @@ const parseCommand = (message = '') => {
 
 const checkSettings = (channel = '', settName) => {
   return SettingsDB.findOne({ channel: channel.toLowerCase().replace('#', ''), name: settName })
+    .cache(0, 'cache-setting-' + settName + '-for-' + channel.toLowerCase().replace('#', ''))
     .then(data => !!data.state)
     .catch(err => false)
 }

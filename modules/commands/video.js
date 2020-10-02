@@ -3,6 +3,7 @@ const { checkSettings } = require(path.join(__dirname, '..', 'Utils'))
 const client = require(path.join(__dirname, '..', 'client'))
 const VideosDB = require(path.join(__dirname, '..', 'models', 'VideosDB'))
 const ytInfo = require('updated-youtube-info')
+const cachegoose = require('cachegoose')
 
 const addVideo = (channel, state, args, io) => {
   checkSettings(channel, 'songrequest').then(bool => {
@@ -38,6 +39,7 @@ const addVideo = (channel, state, args, io) => {
 
               VideosDB.create(vidObj)
                 .then(data => {
+                  cachegoose.clearCache('cache-all-videos-for-' + channel)
                   io.sockets.emit('new_video', data)
                   client.say(channel, `@${state.user.username} видео добавлено`)
                 })
@@ -61,6 +63,7 @@ const addVideo = (channel, state, args, io) => {
 
                 VideosDB.create(vidObj)
                   .then(data => {
+                    cachegoose.clearCache('cache-all-videos-for-' + channel)
                     io.sockets.emit('new_video', data)
                     client.say(channel, `@${state.user.username} видео добавлено`)
                   })

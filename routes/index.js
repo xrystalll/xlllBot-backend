@@ -3,6 +3,8 @@ const router = express.Router()
 const path = require('path')
 
 const Mongoose = require('mongoose')
+const cachegoose = require('cachegoose')
+
 const UserDB = require(path.join(__dirname, '..', 'modules', 'models', 'UserDB'))
 const ChannelDB = require(path.join(__dirname, '..', 'modules', 'models', 'ChannelDB'))
 const CommandDB = require(path.join(__dirname, '..', 'modules', 'models', 'CommandDB'))
@@ -29,6 +31,7 @@ const AuthProtect = (req, res) => new Promise((resolve, reject) => {
   if (!token && !user) reject(null)
 
   return UserDB.findOne({ login: user, hash: token })
+    .cache(30, 'cache-userdata-for-' + user)
     .then(data => resolve(data))
     .catch(error => reject(null))
 })
@@ -146,6 +149,7 @@ router.get('/api/commands/all', (req, res) => {
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
       CommandDB.find({ channel })
+        .cache(0, 'cache-all-commands-for-' + channel)
         .then(data => res.json(data))
         .catch(error => res.status(500).json({ error: 'Unable to get list of commands' }))
     })
@@ -165,7 +169,10 @@ router.put('/api/commands/add', (req, res) => {
       if (!tag || !text || !channel) return res.status(400).json({ error: 'Empty request' })
 
       CommandDB.create({ tag, text, channel })
-        .then(data => res.json(data))
+        .then(data => {
+          cachegoose.clearCache('cache-all-commands-for-' + channel)
+          res.json(data)
+        })
         .catch(error => res.status(500).json({ error: 'Unable to add command' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
@@ -184,7 +191,10 @@ router.put('/api/commands/edit', (req, res) => {
       if (!id || !tag || !text || !channel) return res.status(400).json({ error: 'Empty request' })
 
       CommandDB.updateOne({ _id: Mongoose.Types.ObjectId(id) }, { tag, text })
-        .then(() => res.json({ success: true }))
+        .then(() => {
+          cachegoose.clearCache('cache-all-commands-for-' + channel)
+          res.json({ success: true })
+        })
         .catch(error => res.status(500).json({ error: 'Unable to edit command' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
@@ -203,7 +213,10 @@ router.put('/api/commands/delete', (req, res) => {
       if (!id) return res.status(400).json({ error: 'Empty request' })
 
       CommandDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel })
-        .then(data => res.json({ success: true, deletedCount: data.deletedCount }))
+        .then(data => {
+          cachegoose.clearCache('cache-all-commands-for-' + channel)
+          res.json({ success: true, deletedCount: data.deletedCount })
+        })
         .catch(error => res.status(500).json({ error: 'Unable to delete command' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
@@ -221,6 +234,7 @@ router.get('/api/words/all', (req, res) => {
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
       BadWordsDB.find({ channel })
+        .cache(0, 'cache-all-badwords-for-' + channel)
         .then(data => res.json(data))
         .catch(error => res.status(500).json({ error: 'Unable to get list of badwords' }))
     })
@@ -242,7 +256,10 @@ router.put('/api/words/add', (req, res) => {
       if (duration === 0) return res.status(400).json({ error: 'Duration must be greater then zero' })
 
       BadWordsDB.create({ word: word.toLowerCase(), duration, channel })
-        .then(data => res.json(data))
+        .then(data => {
+          cachegoose.clearCache('cache-all-badwords-for-' + channel)
+          res.json(data)
+        })
         .catch(error => res.status(500).json({ error: 'Unable to add badword' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
@@ -261,7 +278,10 @@ router.put('/api/words/delete', (req, res) => {
       if (!id) return res.status(400).json({ error: 'Empty request' })
 
       BadWordsDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel })
-        .then(data => res.json({ success: true, deletedCount: data.deletedCount }))
+        .then(data => {
+          cachegoose.clearCache('cache-all-badwords-for-' + channel)
+          res.json({ success: true, deletedCount: data.deletedCount })
+        })
         .catch(error => res.status(500).json({ error: 'Unable to delete badword' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
@@ -383,10 +403,13 @@ router.put('/api/settings/toggle', (req, res) => {
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
       if (!name || state === undefined || !channel) return res.status(400).json({ error: 'Empty request' })
-      if (!typeof bool === 'boolean') res.status(400).json({ error: 'State must be boolean' })
+      if (typeof state !== 'boolean') res.status(400).json({ error: 'State must be boolean' })
 
       SettingsDB.updateOne({ name, channel }, { state })
-        .then(() => res.json({ success: true, state }))
+        .then(() => {
+          cachegoose.clearCache('cache-setting-' + name + '-for-' + channel)
+          res.json({ success: true, state })
+        })
         .catch(error => res.status(500).json({ error: 'Unable to save setting' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
@@ -396,6 +419,7 @@ router.put('/api/settings/toggle', (req, res) => {
 // games api
 router.get('/api/games', (req, res) => {
   GamesDB.find()
+    .cache(0, 'cache-all-games')
     .then(data => {
       if (data.length) {
         res.json(data)

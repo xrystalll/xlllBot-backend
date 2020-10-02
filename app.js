@@ -7,6 +7,10 @@ const server = require('http').createServer(app)
 const io = require('socket.io').listen(server)
 const port = process.env.PORT || 7000
 
+const redis = require('redis')
+const redisClient = redis.createClient(config.get('redis.port'))
+const cachegoose = require('cachegoose')
+
 const { checkSettings, declOfNum, checkUrl } = require(path.join(__dirname, 'modules', 'Utils'))
 const routes = require(path.join(__dirname, 'routes'))
 
@@ -51,6 +55,7 @@ client.on('chat', (sharpChannel, user, message, self) => {
   }
 
   BadWordsDB.find({ channel })
+    .cache(0, 'cache-all-badwords-for-' + channel)
     .then(data => {
       data.map(i => {
         if (message.includes(i.word)) {
@@ -323,6 +328,7 @@ io.on('connection', (socket) => {
     if (!channel) return socket.emit('alert', { message: 'Channel does not exist', type: 'error' })
 
     VideosDB.find({ channel })
+      .cache(0, 'cache-all-videos-for-' + channel)
       .then(data => socket.emit('output_videos', data))
       .catch(() => socket.emit('alert', { message: 'Failed to output all videos', type: 'error' }))
   }),
@@ -333,7 +339,10 @@ io.on('connection', (socket) => {
     if (!id && !channel) return socket.emit('alert', { message: 'Channel does not exist', type: 'error' })
 
     VideosDB.deleteOne({ _id: Mongoose.Types.ObjectId(id), channel })
-      .then(() => socket.emit('deteted', { id }))
+      .then(() => {
+        cachegoose.clearCache('cache-all-videos-for-' + channel)
+        socket.emit('deteted', { id })
+      })
       .catch(() => socket.emit('alert', { message: 'Failed to delete video', type: 'error' }))
   }),
 
@@ -359,3 +368,4 @@ io.on('connection', (socket) => {
 }),
 
 server.listen(port, () => console.log('Server running on port ' + port))
+redisClient.on('connect', () => console.log('Redis connected.'))

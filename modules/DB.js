@@ -1,7 +1,16 @@
-const Mongoose = require('mongoose')
 const config = require('config')
 const path = require('path')
+
+const Mongoose = require('mongoose')
+const cachegoose = require('cachegoose')
+
 const ChannelDB = require(path.join(__dirname, 'models', 'ChannelDB'))
+ 
+cachegoose(Mongoose, {
+  engine: 'redis',
+  port: config.get('redis.port'),
+  host: config.get('redis.host')
+})
 
 Mongoose.connect(config.get('mongoremote'), { useUnifiedTopology: true, useNewUrlParser: true })
   .then(() => {
