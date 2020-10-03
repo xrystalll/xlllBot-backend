@@ -10,6 +10,14 @@ const CommandSchema = new Schema({
     type: String,
     required: true
   },
+  countdown: {
+    type: Number,
+    required: true
+  },
+  last_auto_send: {
+    type: String,
+    required: true
+  },
   channel: {
     type: String,
     required: true

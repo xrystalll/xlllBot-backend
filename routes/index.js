@@ -163,12 +163,13 @@ router.put('/api/commands/add', (req, res) => {
       if (!data) throw Error
 
       const channel = data.login
-      const { tag, text } = req.body
+      const { tag, text, countdown } = req.body
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
-      if (!tag || !text || !channel) return res.status(400).json({ error: 'Empty request' })
+      if (!tag || !text || countdown === undefined || !channel) return res.status(400).json({ error: 'Empty request' })
+      if (!Number.isInteger(countdown)) return res.status(400).json({ error: 'Countdown must be a number' })
 
-      CommandDB.create({ tag, text, channel })
+      CommandDB.create({ tag, text, countdown, last_auto_send: Date.now(), channel })
         .then(data => {
           cachegoose.clearCache('cache-all-commands-for-' + channel)
           res.json(data)
@@ -185,12 +186,13 @@ router.put('/api/commands/edit', (req, res) => {
       if (!data) throw Error
 
       const channel = data.login
-      const { id, tag, text } = req.body
+      const { id, tag, text, countdown } = req.body
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
-      if (!id || !tag || !text || !channel) return res.status(400).json({ error: 'Empty request' })
+      if (!id || !tag || !text || !countdown || !channel) return res.status(400).json({ error: 'Empty request' })
+      if (!Number.isInteger(countdown)) return res.status(400).json({ error: 'Countdown must be a number' })
 
-      CommandDB.updateOne({ _id: Mongoose.Types.ObjectId(id) }, { tag, text })
+      CommandDB.updateOne({ _id: Mongoose.Types.ObjectId(id) }, { tag, text, countdown })
         .then(() => {
           cachegoose.clearCache('cache-all-commands-for-' + channel)
           res.json({ success: true })

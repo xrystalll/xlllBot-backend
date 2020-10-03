@@ -7,29 +7,31 @@ const server = require('http').createServer(app)
 const io = require('socket.io').listen(server)
 const port = process.env.PORT || 7000
 
+const routes = require(path.join(__dirname, 'routes'))
+
 const redis = require('redis')
 const redisClient = redis.createClient(config.get('redis.port'))
 const cachegoose = require('cachegoose')
 
-const { checkSettings, declOfNum, checkUrl } = require(path.join(__dirname, 'modules', 'Utils'))
-const routes = require(path.join(__dirname, 'routes'))
-
-const cors = require('cors')
 const session = require('express-session')
 const passport = require('passport')
 const { OAuth2Strategy } = require('passport-oauth')
-const crypto = require('crypto')
-const request = require('request')
+
+const cors = require('cors')
 const hpp = require('hpp')
 const helmet = require('helmet')
 const xssFilter = require('x-xss-protection')
 const RateLimit = require('express-rate-limit')
 const bodyParser = require('body-parser')
 
+const { checkSettings, declOfNum, checkUrl } = require(path.join(__dirname, 'modules', 'Utils'))
+const request = require('request')
+const crypto = require('crypto')
+
 const Mongoose = require('mongoose')
 require(path.join(__dirname, 'modules', 'DB'))
 const UserDB = require(path.join(__dirname, 'modules', 'models', 'UserDB'))
-// const CommandDB = require(path.join(__dirname, 'modules', 'models', 'CommandDB'))
+const CommandDB = require(path.join(__dirname, 'modules', 'models', 'CommandDB'))
 const BadWordsDB = require(path.join(__dirname, 'modules', 'models', 'BadWordsDB'))
 const VideosDB = require(path.join(__dirname, 'modules', 'models', 'VideosDB'))
 const InvitesDB = require(path.join(__dirname, 'modules', 'models', 'InvitesDB'))
@@ -45,7 +47,7 @@ client.on('chat', (sharpChannel, user, message, self) => {
 
   const channel = sharpChannel.toLowerCase().replace('#', '')
 
-  if (message.indexOf('!sr') === -1 && !user.subscriber && !user.mod && user.username !== channel && checkUrl(message)) {
+  if (message.toLowerCase().indexOf('!sr') === -1 && !user.subscriber && !user.mod && user.username !== channel && checkUrl(message)) {
     checkSettings(channel, 'links').then(bool => {
       if (bool) {
         client.deletemessage(channel, user.id).catch(err => console.error(err))
@@ -58,7 +60,7 @@ client.on('chat', (sharpChannel, user, message, self) => {
     .cache(0, 'cache-all-badwords-for-' + channel)
     .then(data => {
       data.map(i => {
-        if (message.includes(i.word)) {
+        if (message.toLowerCase().includes(i.word)) {
           client.deletemessage(channel, user.id).catch(err => console.error(err))
           client.timeout(channel, user.username, i.duration).catch(err => console.error(err))
         }
@@ -70,22 +72,29 @@ client.on('chat', (sharpChannel, user, message, self) => {
     client.say(channel, `@${user.username} больше мне не пиши бля от тебя гавной воняет`)
   }
 
+  CommandDB.find({ channel })
+    .cache(0, 'cache-all-commands-for-' + channel)
+    .then(data => {
+      data.map(i => {
+        if (i.countdown === 0) return
+
+        if (i.last_auto_send * 1 + i.countdown * 1000 < Date.now()) {
+          client.say(channel, i.text)
+
+          CommandDB.updateOne({ channel, tag: i.tag }, { last_auto_send: Date.now() })
+            .then(() => {
+              cachegoose.clearCache('cache-all-commands-for-' + channel)
+            })
+            .catch(err => console.error(err))
+        }
+      })
+    })
+    .catch(err => console.error(err))
+
   if (message.indexOf('!') !== -1) {
     CommandResolver.resolve(channel, user, message.replace(/(<([^>]+)>)/ig, ''), io)
   }
 })
-
-// триггер команд по таймингу
-// let i = 0
-// setInterval(() => {
-//   CommandDB.find()
-//     .then(data => {
-//       if (i > data.length - 1) i = 0
-//       client.say(data[i].channel, data[i].text)
-//       i++
-//     })
-//     .catch(err => console.error(err))
-// }, 60000 * 5)
 
 // подписка
 client.on('subscription', (channel, user, method, message, userstate) => {
