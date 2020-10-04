@@ -189,7 +189,7 @@ router.put('/api/commands/edit', (req, res) => {
       const { id, tag, text, countdown } = req.body
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
-      if (!id || !tag || !text || !countdown || !channel) return res.status(400).json({ error: 'Empty request' })
+      if (!id || !tag || !text || countdown === undefined || !channel) return res.status(400).json({ error: 'Empty request' })
       if (!Number.isInteger(countdown)) return res.status(400).json({ error: 'Countdown must be a number' })
 
       CommandDB.updateOne({ _id: Mongoose.Types.ObjectId(id) }, { tag, text, countdown })

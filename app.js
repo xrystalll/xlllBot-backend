@@ -370,9 +370,9 @@ io.on('connection', (socket) => {
 
     if (!channel) return socket.emit('alert', { message: 'Channel does not exist', type: 'error' })
 
-    EventsDB.deleteMany({ channel, time: { $lt: (Date.now() - 86400 * 1000).toString() } })
+    EventsDB.deleteMany({ channel })
       .then(data => socket.emit('events_deleted', { deletedCount: data.deletedCount }))
-      .catch(error => socket.emit('alert', { message: 'Failed to output all events', type: 'error' }))
+      .catch(error => socket.emit('alert', { message: 'Failed to delete events', type: 'error' }))
   })
 }),
 
