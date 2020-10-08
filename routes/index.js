@@ -131,7 +131,10 @@ router.get('/api/bot/leave', (req, res) => {
             .then(() => res.json({ message: 'Bot left chat: ' + data.join() }))
             .catch(error => res.status(500).json({ error }))
         })
-        .catch(error => res.status(500).json({ error: 'Unable to leave from chat' }))
+        .catch(error => {
+          console.log(error)
+          res.status(500).json({ error: 'Unable to leave from chat' })
+        })
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
@@ -308,76 +311,91 @@ router.get('/api/settings/all', (req, res) => {
           } else {
             const defaultSettings = [
               {
+                sort: 1,
                 name: 'pingpong',
                 state: true,
                 description: 'Мини-игра пинг понг',
                 channel
               }, {
+                sort: 2,
                 name: 'cocksize',
                 state: true,
                 description: 'Мини-игра "Размер..."',
                 channel
               }, {
+                sort: 3,
                 name: 'links',
                 state: true,
                 description: 'Запретить писать ссылки в чат ансабам. Удаление сообщения и таймаут на 10 секунд',
                 channel
               }, {
+                sort: 4,
                 name: 'songforunsub',
                 state: false,
                 description: 'Разрешить заказ видео ансабам',
                 channel
               }, {
+                sort: 5,
                 name: 'songrequest',
                 state: true,
                 description: 'Заказ видео в чате',
                 channel
               }, {
+                sort: 6,
                 name: 'changegame',
                 state: true,
                 description: 'Смена категории стрима командой',
                 channel
               }, {
+                sort: 7,
                 name: 'changetitle',
                 state: true,
                 description: 'Смена названия стрима командой',
                 channel
               }, {
+                sort: 8,
                 name: 'poll',
                 state: true,
                 description: 'Создание голосования командой',
                 channel
               }, {
+                sort: 9,
                 name: 'subscription',
                 state: true,
                 description: 'Уведомлять в чате о новый подписке',
                 channel
               }, {
+                sort: 10,
                 name: 'resub',
                 state: true,
                 description: 'Уведомлять в чате о переподписке',
                 channel
               }, {
+                sort: 11,
                 name: 'subgift',
                 state: true,
                 description: 'Уведомлять в чате о подарочной подписке',
                 channel
               }, {
+                sort: 12,
                 name: 'giftpaidupgrade',
                 state: true,
                 description: 'Уведомлять в чате о продлении подарочной подписки',
                 channel
               }, {
+                sort: 13,
                 name: 'anongiftpaidupgrade',
                 state: true,
                 description: 'Уведомлять в чате о продлении анонимной подарочной подписки',
                 channel
               }, {
+                sort: 14,
                 name: 'raided',
                 state: true,
                 description: 'Уведомлять в чате о рейде',
                 channel
               }, {
+                sort: 15,
                 name: 'cheer',
                 state: true,
                 description: 'Уведомлять в чате о донате битс',

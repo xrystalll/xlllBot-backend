@@ -17,12 +17,12 @@ const session = require('express-session')
 const passport = require('passport')
 const { OAuth2Strategy } = require('passport-oauth')
 
+const bodyParser = require('body-parser')
+const RateLimit = require('express-rate-limit')
 const cors = require('cors')
 const hpp = require('hpp')
 const helmet = require('helmet')
 const xssFilter = require('x-xss-protection')
-const RateLimit = require('express-rate-limit')
-const bodyParser = require('body-parser')
 
 const { checkSettings, declOfNum, checkUrl } = require(path.join(__dirname, 'modules', 'Utils'))
 const request = require('request')
@@ -236,18 +236,17 @@ const limiter = new RateLimit({
 app.use('/api/', limiter),
 
 app.use(session({
-  secret: config.get('auth.session'),
+  secret: crypto.createHash('md5').update(Math.random().toString(36).substring(3)).digest('hex'),
   cookie: { httpOnly: true, sameSite: true },
   resave: false,
   saveUninitialized: false
 })),
+app.use(bodyParser.json()),
 app.use(passport.initialize()),
 app.use(passport.session()),
 app.use(hpp()),
 app.use(helmet.noSniff()),
 app.use(xssFilter()),
-app.use(bodyParser.json()),
-
 app.use(cors()),
 
 // twitch auth

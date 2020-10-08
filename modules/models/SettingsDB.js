@@ -2,6 +2,10 @@ const Mongoose = require('mongoose')
 const Schema = Mongoose.Schema
 
 const SettingsSchema = new Schema({
+  sort: {
+    type: Number,
+    required: true
+  },
   name: {
     type: String,
     required: true

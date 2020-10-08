@@ -13,7 +13,6 @@
   },
   "auth": {
     "secret": "",
-    "session": "",
     "callback_url": "/auth/twitch/callback"
   },
   "mongoremote": "mongodb+srv://",
