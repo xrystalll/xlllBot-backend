@@ -16,6 +16,7 @@ const InvitesDB = require(path.join(__dirname, '..', 'modules', 'models', 'Invit
 const GamesDB = require(path.join(__dirname, '..', 'modules', 'models', 'GamesDB'))
 
 const client = require(path.join(__dirname, '..', 'modules', 'client'))
+const pubsub = require(path.join(__dirname, '..', 'modules', 'pubSub'))
 
 const AuthProtect = (req, res) => new Promise((resolve, reject) => {
   const auth = req.get('authorization')
@@ -26,12 +27,12 @@ const AuthProtect = (req, res) => new Promise((resolve, reject) => {
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
-  const [user, token] = credentials
+  const [login, hash] = credentials
 
-  if (!token && !user) reject(null)
+  if (!hash && !login) reject(null)
 
-  return UserDB.findOne({ login: user, hash: token })
-    .cache(30, 'cache-userdata-for-' + user)
+  return UserDB.findOne({ login, hash })
+    .cache(30, 'cache-userdata-for-' + login)
     .then(data => resolve(data))
     .catch(error => reject(null))
 })
@@ -43,7 +44,11 @@ router.get('/api/user', (req, res) => {
     .then(data => {
       if (!data) throw Error
 
-      res.json(data)
+      res.json({
+        twitchId: data.twitchId,
+        login: data.login,
+        logo: data.logo
+      })
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),
@@ -105,9 +110,12 @@ router.get('/api/bot/join', (req, res) => {
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
       client.join(channel)
-        .then(data => {
+        .then(joined => {
           ChannelDB.updateOne({ name: channel }, { bot_active: true })
-            .then(() => res.json({ message: 'Bot joined to chat: ' + data.join() }))
+            .then(() => {
+              pubsub.addTopic([{ topic: 'channel-points-channel-v1.' + data.twitchId, token: data.token }])
+              res.json({ message: 'Bot joined to chat: ' + joined.join() })
+            })
             .catch(error => res.status(500).json({ error }))
         })
         .catch(error => res.status(500).json({ error: 'Unable join to chat' }))
@@ -126,15 +134,15 @@ router.get('/api/bot/leave', (req, res) => {
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
       client.part(channel)
-        .then(data => {
+        .then(leaved => {
           ChannelDB.updateOne({ name: channel }, { bot_active: false })
-            .then(() => res.json({ message: 'Bot left chat: ' + data.join() }))
+            .then(() => {
+              pubsub.removeTopic([{ topic: 'channel-points-channel-v1.' + data.twitchId }])
+              res.json({ message: 'Bot left chat: ' + leaved.join() })
+            })
             .catch(error => res.status(500).json({ error }))
         })
-        .catch(error => {
-          console.log(error)
-          res.status(500).json({ error: 'Unable to leave from chat' })
-        })
+        .catch(error => res.status(500).json({ error: 'Unable to leave from chat' }))
     })
     .catch(error => res.status(401).json({ error: 'Access Denied' }))
 }),

@@ -11,6 +11,9 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
+  token: {
+    type: String
+  },
   hash: {
     type: String
   },

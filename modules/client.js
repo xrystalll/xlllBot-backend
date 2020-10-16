@@ -1,4 +1,4 @@
-const tmi = require ('tmi.js')
+const tmi = require('tmi.js')
 const config = require('config')
 
 const client = new tmi.client({
