@@ -114,6 +114,7 @@ router.get('/api/bot/join', (req, res) => {
           ChannelDB.updateOne({ name: channel }, { bot_active: true })
             .then(() => {
               pubsub.addTopic([{ topic: 'channel-points-channel-v1.' + data.twitchId, token: data.token }])
+                .catch(error => console.error(error))
               res.json({ message: 'Bot joined to chat: ' + joined.join() })
             })
             .catch(error => res.status(500).json({ error }))
@@ -138,6 +139,7 @@ router.get('/api/bot/leave', (req, res) => {
           ChannelDB.updateOne({ name: channel }, { bot_active: false })
             .then(() => {
               pubsub.removeTopic([{ topic: 'channel-points-channel-v1.' + data.twitchId }])
+                .catch(error => console.error(error))
               res.json({ message: 'Bot left chat: ' + leaved.join() })
             })
             .catch(error => res.status(500).json({ error }))
@@ -338,72 +340,85 @@ router.get('/api/settings/all', (req, res) => {
                 channel
               }, {
                 sort: 4,
-                name: 'songforunsub',
-                state: false,
-                description: 'Разрешить заказ видео ансабам',
-                channel
-              }, {
-                sort: 5,
                 name: 'songrequest',
                 state: true,
                 description: 'Заказ видео в чате',
                 channel
               }, {
+                sort: 5,
+                name: 'songforunsub',
+                state: false,
+                description: 'Разрешить заказ видео ансабам',
+                channel
+              }, {
                 sort: 6,
+                name: 'songforpoints',
+                state: false,
+                description: 'Заказ видео за баллы канала (Не включайте если баллы на канале отключены или недоступны)',
+                channel
+              }, {
+                sort: 7,
+                name: 'songforpointsprice',
+                state: false,
+                value: 1000,
+                description: 'Цена в баллах канала за заказ видео',
+                channel
+              }, {
+                sort: 8,
                 name: 'changegame',
                 state: true,
                 description: 'Смена категории стрима командой',
                 channel
               }, {
-                sort: 7,
+                sort: 9,
                 name: 'changetitle',
                 state: true,
                 description: 'Смена названия стрима командой',
                 channel
               }, {
-                sort: 8,
+                sort: 10,
                 name: 'poll',
                 state: true,
                 description: 'Создание голосования командой',
                 channel
               }, {
-                sort: 9,
+                sort: 11,
                 name: 'subscription',
                 state: true,
                 description: 'Уведомлять в чате о новый подписке',
                 channel
               }, {
-                sort: 10,
+                sort: 12,
                 name: 'resub',
                 state: true,
                 description: 'Уведомлять в чате о переподписке',
                 channel
               }, {
-                sort: 11,
+                sort: 13,
                 name: 'subgift',
                 state: true,
                 description: 'Уведомлять в чате о подарочной подписке',
                 channel
               }, {
-                sort: 12,
+                sort: 14,
                 name: 'giftpaidupgrade',
                 state: true,
                 description: 'Уведомлять в чате о продлении подарочной подписки',
                 channel
               }, {
-                sort: 13,
+                sort: 15,
                 name: 'anongiftpaidupgrade',
                 state: true,
                 description: 'Уведомлять в чате о продлении анонимной подарочной подписки',
                 channel
               }, {
-                sort: 14,
+                sort: 16,
                 name: 'raided',
                 state: true,
                 description: 'Уведомлять в чате о рейде',
                 channel
               }, {
-                sort: 15,
+                sort: 17,
                 name: 'cheer',
                 state: true,
                 description: 'Уведомлять в чате о донате битс',
@@ -427,13 +442,16 @@ router.put('/api/settings/toggle', (req, res) => {
       if (!data) throw Error
 
       const channel = data.login
-      const { name, state } = req.body
+      const { name, state, value } = req.body
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
       if (!name || state === undefined || !channel) return res.status(400).json({ error: 'Empty request' })
       if (typeof state !== 'boolean') res.status(400).json({ error: 'State must be boolean' })
+      if (!!value) {
+        if (!Number.isInteger(value)) return res.status(400).json({ error: 'Value must be a number' })
+      }
 
-      SettingsDB.updateOne({ name, channel }, { state })
+      SettingsDB.updateOne({ name, channel }, { state, value })
         .then(() => {
           cachegoose.clearCache('cache-setting-' + name + '-for-' + channel)
           res.json({ success: true, state })

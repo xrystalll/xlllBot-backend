@@ -2,6 +2,16 @@ const Mongoose = require('mongoose')
 const Schema = Mongoose.Schema
 
 const VideosSchema = new Schema({
+  from: {
+    username: {
+      type: String,
+      required: true
+    },
+    price: {
+      type: Number,
+      required: true
+    }
+  },
   yid: {
     type: String,
     required: true

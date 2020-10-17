@@ -14,6 +14,9 @@ const SettingsSchema = new Schema({
     type: Boolean,
     required: true
   },
+  value: {
+    type: Number
+  },
   description: {
     type: String
   },

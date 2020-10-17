@@ -1,4 +1,5 @@
-const TwitchPS = require('twitchps')
+const path = require('path')
+const TwitchPS = require(path.join(__dirname, 'libs', 'TwitchPS'))
 const config = require('config')
 
 const pubsub = new TwitchPS({

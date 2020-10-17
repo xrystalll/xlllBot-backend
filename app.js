@@ -24,7 +24,7 @@ const hpp = require('hpp')
 const helmet = require('helmet')
 const xssFilter = require('x-xss-protection')
 
-const { checkSettings, declOfNum, checkUrl } = require(path.join(__dirname, 'modules', 'Utils'))
+const { checkSettings, declOfNum, checkUrl, checkYTUrl } = require(path.join(__dirname, 'modules', 'Utils'))
 const request = require('request')
 const crypto = require('crypto')
 
@@ -36,11 +36,13 @@ const BadWordsDB = require(path.join(__dirname, 'modules', 'models', 'BadWordsDB
 const VideosDB = require(path.join(__dirname, 'modules', 'models', 'VideosDB'))
 const InvitesDB = require(path.join(__dirname, 'modules', 'models', 'InvitesDB'))
 const EventsDB = require(path.join(__dirname, 'modules', 'models', 'EventsDB'))
+const SettingsDB = require(path.join(__dirname, 'modules', 'models', 'SettingsDB'))
 
 const client = require(path.join(__dirname, 'modules', 'client'))
 const CommandResolver = require(path.join(__dirname, 'modules', 'CommandResolver'))
 
 const pubsub = require(path.join(__dirname, 'modules', 'pubSub'))
+const { createVideo } = require(path.join(__dirname, 'modules', 'commands', 'video'))
 
 client.connect()
 
@@ -229,9 +231,53 @@ client.on('cheer', (channel, userstate, message) => {
     .catch(err => console.error(err))
 })
 
-// pubsub.on('channel-points', (data) => {
-//   console.log(data)
-// })
+// заказ видео за баллы канала
+pubsub.on('channel-points', (data) => {
+  console.log(data)
+
+  if (data.redemption.user_input.toLowerCase().indexOf('!sr') === -1) return
+  if (!checkYTUrl(data.redemption.user_input)) return
+
+  request({
+    url: 'https://api.twitch.tv/kraken/channels/' + data.redemption.channel_id,
+    method: 'GET',
+    headers: {
+      Accept: 'application/vnd.twitchtv.v5+json',
+      'Client-ID': config.get('bot.client_id')
+    }
+  }, (err, res, body) => {
+    if (err) return
+
+    const channel = JSON.parse(body)
+
+    if (!channel.error) {
+      SettingsDB.findOne({ channel: channel.name, name: 'songforpointsprice' })
+        .then(res => {
+          checkSettings(channel.name, 'songrequest').then(bool => {
+            if (bool) {
+              checkSettings(channel.name, 'songforpoints').then(setting => {
+                if (setting) {
+                  if (data.redemption.reward.cost !== res.value) {
+                    client.say(channel.name, `@${data.redemption.login} стоимость заказа видео ${data.redemption.reward.cost} баллов!`)
+                    return
+                  }
+
+                  createVideo({
+                    url: data.redemption.user_input,
+                    channel: channel.name,
+                    username: data.redemption.login,
+                    price: data.redemption.reward.cost
+                  }, io)
+                }
+              })
+            } else client.say(channel.name, 'Возможность заказывать видео выключена!')
+          })
+        })
+    } else {
+      console.error('Channel does not exist')
+    }
+  })
+})
 
 pubsub.on('error', (data) => {
   console.error(data)

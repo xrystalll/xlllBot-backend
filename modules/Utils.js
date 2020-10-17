@@ -49,4 +49,11 @@ const timeFormat = (date) => {
 
 const checkUrl = (url) => url.match(/(https?:\/\/[^\s]+)/g) != null;
 
-module.exports = { parseCommand, checkSettings, declOfNum, timeFormat, checkUrl }
+const checkYTUrl = (url) => url.match(/^.*((youtu.be\/)|(v\/)|(\/\w\/)|(watch\?))\??v?=?([^#\&\?]*).*/g) != null;
+
+const youtubeId = (url) => {
+  const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/)
+  return (match && match[7].length === 11) ? match[7] : false
+}
+
+module.exports = { parseCommand, checkSettings, declOfNum, timeFormat, checkUrl, checkYTUrl, youtubeId }
