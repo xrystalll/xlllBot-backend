@@ -17,8 +17,8 @@ const poll = (channel, args) => {
       if (options.length < 2) return client.say(channel, 'Команда введена неверно!')
 
       request({
-        url: 'https://www.strawpoll.me/api/v2/polls',
         method: 'POST',
+        url: 'https://www.strawpoll.me/api/v2/polls',
         headers: {
           'Content-Type': 'application/json'
         },

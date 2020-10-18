@@ -10,4 +10,9 @@ const pubsub = new TwitchPS({
   }]
 })
 
+setTimeout(() => {
+  pubsub.removeTopic([{ topic: 'video-playback.twitch' }])
+    .catch(error => console.error(error))
+}, 3000)
+
 module.exports = pubsub

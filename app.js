@@ -239,11 +239,11 @@ pubsub.on('channel-points', (data) => {
   if (!checkYTUrl(data.redemption.user_input)) return
 
   request({
-    url: 'https://api.twitch.tv/kraken/channels/' + data.redemption.channel_id,
     method: 'GET',
+    url: 'https://api.twitch.tv/kraken/channels/' + data.redemption.channel_id,
     headers: {
-      Accept: 'application/vnd.twitchtv.v5+json',
-      'Client-ID': config.get('bot.client_id')
+      'Client-ID': config.get('bot.client_id'),
+      Accept: 'application/vnd.twitchtv.v5+json'
     }
   }, (err, res, body) => {
     if (err) return
@@ -311,9 +311,9 @@ OAuth2Strategy.prototype.userProfile = (accessToken, next) => {
     method: 'GET',
     url: 'https://api.twitch.tv/helix/users',
     headers: {
-      Accept: 'application/vnd.twitchtv.v5+json',
+      Authorization: 'Bearer ' + accessToken,
       'Client-ID': config.get('bot.client_id'),
-      Authorization: 'Bearer ' + accessToken
+      Accept: 'application/vnd.twitchtv.v5+json'
     }
   }, (err, res, data) => {
     if (res && res.statusCode === 200) {

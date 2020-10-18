@@ -29,12 +29,12 @@ const setGame = (channel, roomId, game) => {
   const streamObject = {"channel": { game, "channel_feed_enabled": true }}
 
   request({
-    url: 'https://api.twitch.tv/kraken/channels/' + roomId,
     method: 'PUT',
+    url: 'https://api.twitch.tv/kraken/channels/' + roomId,
     headers: {
-      Accept: 'application/vnd.twitchtv.v5+json',
       Authorization: 'OAuth ' + config.get('bot.oauth_token'),
       'Client-ID': config.get('bot.client_id'),
+      Accept: 'application/vnd.twitchtv.v5+json',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(streamObject)

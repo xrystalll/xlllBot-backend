@@ -6,11 +6,11 @@ const request = require('request')
 
 const upTime = (channel, roomId) => {
   request({
-    url: 'https://api.twitch.tv/kraken/streams/' + roomId,
     method: 'GET',
+    url: 'https://api.twitch.tv/kraken/streams/' + roomId,
     headers: {
-      Accept: 'application/vnd.twitchtv.v5+json',
-      'Client-ID': config.get('bot.client_id')
+      'Client-ID': config.get('bot.client_id'),
+      Accept: 'application/vnd.twitchtv.v5+json'
     }
   }, (err, res, body) => {
     if (err) return
