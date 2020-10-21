@@ -233,8 +233,6 @@ client.on('cheer', (channel, userstate, message) => {
 
 // заказ видео за баллы канала
 pubsub.on('channel-points', (data) => {
-  console.log(data)
-
   if (data.redemption.user_input.toLowerCase().indexOf('!sr') === -1) return
   if (!checkYTUrl(data.redemption.user_input)) return
 
@@ -248,29 +246,31 @@ pubsub.on('channel-points', (data) => {
   }, (err, res, body) => {
     if (err) return
 
-    const channel = JSON.parse(body)
+    if (res && res.statusCode === 200) {
+      const channelData = JSON.parse(body)
+      const channel = channelData.name
 
-    if (!channel.error) {
-      SettingsDB.findOne({ channel: channel.name, name: 'songforpointsprice' })
+      SettingsDB.findOne({ channel, name: 'songforpointsprice' })
         .then(res => {
-          checkSettings(channel.name, 'songrequest').then(bool => {
+          checkSettings(channel, 'songrequest').then(bool => {
             if (bool) {
-              checkSettings(channel.name, 'songforpoints').then(setting => {
+              checkSettings(channel, 'songforpoints').then(setting => {
                 if (setting) {
-                  if (data.redemption.reward.cost !== res.value) {
-                    client.say(channel.name, `@${data.redemption.login} стоимость заказа видео ${data.redemption.reward.cost} баллов!`)
+                  if (data.redemption.reward.cost < res.value) {
+                    const text = `@${data.redemption.user.login} стоимость заказа видео ${res.value} ${declOfNum(res.value, ['балл', 'балла', 'баллов'])}!`
+                    client.say(channel, text)
                     return
                   }
 
                   createVideo({
                     url: data.redemption.user_input,
-                    channel: channel.name,
-                    username: data.redemption.login,
+                    channel,
+                    username: data.redemption.user.login,
                     price: data.redemption.reward.cost
                   }, io)
                 }
               })
-            } else client.say(channel.name, 'Возможность заказывать видео выключена!')
+            } else client.say(channel, 'Возможность заказывать видео выключена!')
           })
         })
     } else {

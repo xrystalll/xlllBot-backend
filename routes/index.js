@@ -23,18 +23,18 @@ const AuthProtect = (req, res) => new Promise((resolve, reject) => {
 
   if (!auth) {
     res.set("WWW-Authenticate", "Basic realm='Authorization Required'")
-    reject(null)
+    return reject()
   }
 
   const credentials = new Buffer.from(auth.split(' ').pop(), 'base64').toString('ascii').split(':')
   const [login, hash] = credentials
 
-  if (!hash && !login) reject(null)
+  if (!hash && !login) return reject()
 
   return UserDB.findOne({ login, hash })
     .cache(30, 'cache-userdata-for-' + login)
     .then(data => resolve(data))
-    .catch(error => reject(null))
+    .catch(error => reject())
 })
 
 // users api
@@ -454,7 +454,7 @@ router.put('/api/settings/toggle', (req, res) => {
       SettingsDB.updateOne({ name, channel }, { state, value })
         .then(() => {
           cachegoose.clearCache('cache-setting-' + name + '-for-' + channel)
-          res.json({ success: true, state })
+          res.json({ success: true, state, value })
         })
         .catch(error => res.status(500).json({ error: 'Unable to save setting' }))
     })
