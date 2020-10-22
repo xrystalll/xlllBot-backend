@@ -111,8 +111,6 @@ client.on('subscription', (channel, user, method, message, userstate) => {
       break
     case '3000': plan = ' 3 уровня'
       break
-    default:
-      break
   }
   const text = `@${user} спасибо за${prime ? ' Twitch Prime' : ''} подписку${plan || ''} Kreygasm`
   const event = `${user} осуществляет подписку${plan || ''}${prime ? ' с помощью Twitch Prime' : ''}`
@@ -126,16 +124,14 @@ client.on('subscription', (channel, user, method, message, userstate) => {
 
 // переподписка
 client.on('resub', (channel, user, months, message, userstate, method) => {
-  let plan
   const cumulativeMonths = userstate['msg-param-cumulative-months']
+  let plan
   switch (method.plan) {
     case '1000': plan = ' 1 уровня'
       break
     case '2000': plan = ' 2 уровня'
       break
     case '3000': plan = ' 3 уровня'
-      break
-    default:
       break
   }
   if (cumulativeMonths) {
@@ -169,8 +165,6 @@ client.on('subgift', (channel, user, streakMonths, recipient, method, userstate)
     case '2000': plan = ' 2 уровня'
       break
     case '3000': plan = ' 3 уровня'
-      break
-    default:
       break
   }
   const text = `${user} дарит подписку${plan || ''} @${recipientUser} PogChamp`
@@ -250,14 +244,14 @@ pubsub.on('channel-points', (data) => {
       const channelData = JSON.parse(body)
       const channel = channelData.name
 
-      SettingsDB.findOne({ channel, name: 'songforpointsprice' })
-        .then(res => {
-          checkSettings(channel, 'songrequest').then(bool => {
-            if (bool) {
-              checkSettings(channel, 'songforpoints').then(setting => {
-                if (setting) {
-                  if (data.redemption.reward.cost < res.value) {
-                    const text = `@${data.redemption.user.login} стоимость заказа видео ${res.value} ${declOfNum(res.value, ['балл', 'балла', 'баллов'])}!`
+      checkSettings(channel, 'songrequest').then(bool => {
+        if (bool) {
+          checkSettings(channel, 'songforpoints').then(setting => {
+            if (setting) {
+              SettingsDB.findOne({ channel, name: 'songforpointsprice' })
+                .then(price => {
+                  if (data.redemption.reward.cost < price.value) {
+                    const text = `@${data.redemption.user.login} стоимость заказа видео ${price.value} ${declOfNum(price.value, ['балл', 'балла', 'баллов'])}!`
                     client.say(channel, text)
                     return
                   }
@@ -268,11 +262,12 @@ pubsub.on('channel-points', (data) => {
                     username: data.redemption.user.login,
                     price: data.redemption.reward.cost
                   }, io)
-                }
-              })
-            } else client.say(channel, 'Возможность заказывать видео выключена!')
+                })
+                .catch(err => console.error(err))
+            }
           })
-        })
+        } else client.say(channel, 'Возможность заказывать видео выключена!')
+      })
     } else {
       console.error('Channel does not exist')
     }
@@ -438,3 +433,4 @@ io.on('connection', (socket) => {
 
 server.listen(port, () => console.log('Server running on port ' + port))
 redisClient.on('connect', () => console.log('Redis connected.'))
+redisClient.on('error', (err) => console.error('Redis error: ', err))
