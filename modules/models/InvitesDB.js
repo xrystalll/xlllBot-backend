@@ -5,7 +5,8 @@ const findOrCreate = require('mongoose-findorcreate')
 const InviteSchema = new Schema({
   channel: {
     type: String,
-    required: true
+    required: true,
+    lowercase: true
   }
 })
 InviteSchema.plugin(findOrCreate)

@@ -4,7 +4,8 @@ const Schema = Mongoose.Schema
 const CommandSchema = new Schema({
   tag: {
     type: String,
-    required: true
+    required: true,
+    lowercase: true
   },
   text: {
     type: String,
@@ -20,7 +21,8 @@ const CommandSchema = new Schema({
   },
   channel: {
     type: String,
-    required: true
+    required: true,
+    lowercase: true
   }
 })
 

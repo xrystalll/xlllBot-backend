@@ -6,7 +6,7 @@ const Mongoose = require('mongoose')
 const cachegoose = require('cachegoose')
 
 const UserDB = require(path.join(__dirname, '..', 'modules', 'models', 'UserDB'))
-const ChannelDB = require(path.join(__dirname, '..', 'modules', 'models', 'ChannelDB'))
+const ChannelsDB = require(path.join(__dirname, '..', 'modules', 'models', 'ChannelsDB'))
 const CommandDB = require(path.join(__dirname, '..', 'modules', 'models', 'CommandDB'))
 const BadWordsDB = require(path.join(__dirname, '..', 'modules', 'models', 'BadWordsDB'))
 const SettingsDB = require(path.join(__dirname, '..', 'modules', 'models', 'SettingsDB'))
@@ -65,12 +65,12 @@ router.get('/api/channel', (req, res) => {
 
       if (!channel) return res.status(400).json({ error: 'Channel name does not exist' })
 
-      ChannelDB.find({ name: channel })
+      ChannelsDB.find({ name: channel })
         .then(data => {
           if (data.length) {
             res.json(data)
           } else {
-            ChannelDB.create({ name: channel })
+            ChannelsDB.create({ name: channel })
               .then(output => res.json([output]))
               .catch(error => res.status(500).json({ error }))
           }
@@ -111,7 +111,7 @@ router.get('/api/bot/join', (req, res) => {
 
       client.join(channel)
         .then(joined => {
-          ChannelDB.updateOne({ name: channel }, { bot_active: true })
+          ChannelsDB.updateOne({ name: channel }, { bot_active: true })
             .then(() => {
               pubsub.addTopic([{ topic: 'channel-points-channel-v1.' + data.twitchId, token: data.token }])
                 .catch(error => console.error(error))
@@ -136,7 +136,7 @@ router.get('/api/bot/leave', (req, res) => {
 
       client.part(channel)
         .then(leaved => {
-          ChannelDB.updateOne({ name: channel }, { bot_active: false })
+          ChannelsDB.updateOne({ name: channel }, { bot_active: false })
             .then(() => {
               pubsub.removeTopic([{ topic: 'channel-points-channel-v1.' + data.twitchId }])
                 .catch(error => console.error(error))
@@ -270,7 +270,7 @@ router.put('/api/words/add', (req, res) => {
       if (!Number.isInteger(duration)) return res.status(400).json({ error: 'Duration must be a number' })
       if (duration === 0) return res.status(400).json({ error: 'Duration must be greater then zero' })
 
-      BadWordsDB.create({ word: word.toLowerCase(), duration, channel })
+      BadWordsDB.create({ word, duration, channel })
         .then(data => {
           cachegoose.clearCache('cache-all-badwords-for-' + channel)
           res.json(data)

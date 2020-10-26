@@ -5,11 +5,14 @@ const findOrCreate = require('mongoose-findorcreate')
 const UserSchema = new Schema({
   twitchId: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   login: {
     type: String,
-    required: true
+    required: true,
+    unique: true,
+    lowercase: true
   },
   token: {
     type: String

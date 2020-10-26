@@ -4,7 +4,7 @@ const path = require('path')
 const Mongoose = require('mongoose')
 const cachegoose = require('cachegoose')
 
-const ChannelDB = require(path.join(__dirname, 'models', 'ChannelDB'))
+const ChannelsDB = require(path.join(__dirname, 'models', 'ChannelsDB'))
  
 cachegoose(Mongoose, {
   engine: 'redis',
@@ -14,7 +14,7 @@ cachegoose(Mongoose, {
 
 Mongoose.connect(config.get('mongoremote'), { useUnifiedTopology: true, useNewUrlParser: true })
   .then(() => {
-    ChannelDB.updateMany({ bot_active: true }, { bot_active: false }, (err) => {
+    ChannelsDB.updateMany({ bot_active: true }, { bot_active: false }, (err) => {
       if (err) console.error('Change bot status error:', err)
     })
     console.log('MongoDB connected.')

@@ -4,11 +4,14 @@ const Schema = Mongoose.Schema
 const GamesSchema = new Schema({
   game: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   short: {
     type: String,
-    required: true
+    required: true,
+    unique: true,
+    lowercase: true
   }
 })
 

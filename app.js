@@ -117,7 +117,7 @@ client.on('subscription', (channel, user, method, message, userstate) => {
   checkSettings(channel, 'subscription').then(bool => {
     if (bool) client.say(channel, text)
   })
-  EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
+  EventsDB.create({ channel: channel.substr(1), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
 })
@@ -140,7 +140,7 @@ client.on('resub', (channel, user, months, message, userstate, method) => {
     checkSettings(channel, 'resub').then(bool => {
       if (bool) client.say(channel, text)
     })
-    EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
+    EventsDB.create({ channel: channel.substr(1), text: event, time: Date.now() })
       .then(data => io.sockets.emit('new_event', data))
       .catch(err => console.error(err))
   } else {
@@ -149,7 +149,7 @@ client.on('resub', (channel, user, months, message, userstate, method) => {
     checkSettings(channel, 'resub').then(bool => {
       if (bool) client.say(channel, text)
     })
-    EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
+    EventsDB.create({ channel: channel.substr(1), text: event, time: Date.now() })
       .then(data => io.sockets.emit('new_event', data))
       .catch(err => console.error(err))
   }
@@ -172,7 +172,7 @@ client.on('subgift', (channel, user, streakMonths, recipient, method, userstate)
   checkSettings(channel, 'subgift').then(bool => {
     if (bool) client.say(channel, text)
   })
-  EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
+  EventsDB.create({ channel: channel.substr(1), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
 })
@@ -184,7 +184,7 @@ client.on('giftpaidupgrade', (channel, user, sender, userstate) => {
   checkSettings(channel, 'giftpaidupgrade').then(bool => {
     if (bool) client.say(channel, text)
   })
-  EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
+  EventsDB.create({ channel: channel.substr(1), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
 })
@@ -196,7 +196,7 @@ client.on('anongiftpaidupgrade', (channel, user, userstate) => {
   checkSettings(channel, 'anongiftpaidupgrade').then(bool => {
     if (bool) client.say(channel, text)
   })
-  EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
+  EventsDB.create({ channel: channel.substr(1), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
 })
@@ -208,7 +208,7 @@ client.on('raided', (channel, user, viewers) => {
   checkSettings(channel, 'raided').then(bool => {
     if (bool) client.say(channel, text)
   })
-  EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
+  EventsDB.create({ channel: channel.substr(1), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
 })
@@ -220,7 +220,7 @@ client.on('cheer', (channel, userstate, message) => {
   checkSettings(channel, 'cheer').then(bool => {
     if (bool) client.say(channel, text)
   })
-  EventsDB.create({ channel: channel.substr(1).toLowerCase(), text: event, time: Date.now() })
+  EventsDB.create({ channel: channel.substr(1), text: event, time: Date.now() })
     .then(data => io.sockets.emit('new_event', data))
     .catch(err => console.error(err))
 })
@@ -298,7 +298,10 @@ app.use(passport.session()),
 app.use(hpp()),
 app.use(helmet.noSniff()),
 app.use(xssFilter()),
-app.use(cors()),
+app.use(cors({
+  origin: config.get('clientEndPoint'),
+  credentials: true
+})),
 
 // twitch auth
 OAuth2Strategy.prototype.userProfile = (accessToken, next) => {
@@ -375,8 +378,11 @@ app.get('/auth/twitch/callback', passport.authenticate('twitch', { failureRedire
     .then(() => {
       UserDB.find({ twitchId: id })
         .then(data => {
-          io.sockets.emit('user_data', { login: data[0].login, logo: data[0].logo }),
-          res.redirect(config.get('clientEndPoint') + '/auth/?sess=' + hash)
+          res.cookie('login', data[0].login)
+          res.cookie('logo', data[0].logo)
+          res.cookie('token', hash)
+          io.sockets.emit('auth', { auth: true }),
+          res.redirect(config.get('clientEndPoint') + '/auth')
         })
         .catch(error => res.status(401).redirect(config.get('clientEndPoint') + '/auth/error'))
     })

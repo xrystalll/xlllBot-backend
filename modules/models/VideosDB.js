@@ -5,7 +5,8 @@ const VideosSchema = new Schema({
   from: {
     username: {
       type: String,
-      required: true
+      required: true,
+      lowercase: true
     },
     price: {
       type: Number,
@@ -22,7 +23,8 @@ const VideosSchema = new Schema({
   },
   channel: {
     type: String,
-    required: true
+    required: true,
+    lowercase: true
   },
   title: {
     type: String,
@@ -33,11 +35,11 @@ const VideosSchema = new Schema({
     required: true
   },
   views: {
-    type: String,
+    type: Number,
     required: true
   },
   duration: {
-    type: String,
+    type: Number,
     required: true
   },
   thumb: {

@@ -12,7 +12,8 @@ const EventsSchema = new Schema({
   },
   channel: {
     type: String,
-    required: true
+    required: true,
+    lowercase: true
   }
 })
 

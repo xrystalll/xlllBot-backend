@@ -4,7 +4,8 @@ const Schema = Mongoose.Schema
 const BadWordsSchema = new Schema({
   word: {
     type: String,
-    required: true
+    required: true,
+    lowercase: true
   },
   duration: {
     type: Number,
@@ -12,7 +13,8 @@ const BadWordsSchema = new Schema({
   },
   channel: {
     type: String,
-    required: true
+    required: true,
+    lowercase: true
   }
 })
 

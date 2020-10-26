@@ -21,8 +21,8 @@ const createVideo = ({ url, channel, username, price }, io) => {
         channel,
         title: ytData.title,
         owner: ytData.owner,
-        views: ytData.views,
-        duration: ytData.duration,
+        views: parseInt(ytData.views),
+        duration: parseInt(ytData.duration),
         thumb: ytData.thumbnailUrl
       }
 
