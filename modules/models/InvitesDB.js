@@ -6,6 +6,7 @@ const InviteSchema = new Schema({
   channel: {
     type: String,
     required: true,
+    unique: true,
     lowercase: true
   }
 })

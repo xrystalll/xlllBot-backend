@@ -378,9 +378,10 @@ app.get('/auth/twitch/callback', passport.authenticate('twitch', { failureRedire
     .then(() => {
       UserDB.find({ twitchId: id })
         .then(data => {
-          res.cookie('login', data[0].login)
-          res.cookie('logo', data[0].logo)
-          res.cookie('token', hash)
+          const maxAge = 1000 * 60 * 60 * 24
+          res.cookie('login', data[0].login, { maxAge })
+          res.cookie('logo', data[0].logo, { maxAge })
+          res.cookie('token', hash, { maxAge })
           io.sockets.emit('auth', { auth: true }),
           res.redirect(config.get('clientEndPoint') + '/auth')
         })
