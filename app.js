@@ -5,7 +5,7 @@ const express = require('express')
 const app = express()
 const server = require('http').createServer(app)
 const io = require('socket.io').listen(server)
-const port = process.env.PORT || 7000
+const port = process.env.PORT || 1337
 
 const routes = require(path.join(__dirname, 'routes'))
 
@@ -382,7 +382,9 @@ app.get('/auth/twitch/callback', passport.authenticate('twitch', { failureRedire
           res.cookie('login', data[0].login, { maxAge })
           res.cookie('logo', data[0].logo, { maxAge })
           res.cookie('token', hash, { maxAge })
-          io.sockets.emit('auth', { auth: true }),
+
+          io.sockets.emit('auth', { auth: true })
+
           res.redirect(config.get('clientEndPoint') + '/auth')
         })
         .catch(error => res.status(401).redirect(config.get('clientEndPoint') + '/auth/error'))
