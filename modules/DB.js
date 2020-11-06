@@ -12,7 +12,7 @@ cachegoose(Mongoose, {
   host: config.get('redis.host')
 })
 
-Mongoose.connect(config.get('mongoremote'), { useUnifiedTopology: true, useNewUrlParser: true })
+Mongoose.connect(config.get('mongoremote'), { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true })
   .then(() => {
     ChannelsDB.updateMany({ bot_active: true }, { bot_active: false }, (err) => {
       if (err) console.error('Change bot status error:', err)
