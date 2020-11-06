@@ -1,5 +1,5 @@
-const config = require('config')
 const path = require('path')
+const config = require(path.join(__dirname, '..', '..', 'config', 'default.json'))
 const { checkSettings } = require(path.join(__dirname, '..', 'Utils'))
 const client = require(path.join(__dirname, '..', 'client'))
 const UserDB = require(path.join(__dirname, '..', 'models', 'UserDB'))
@@ -34,7 +34,7 @@ const setGame = (channel, roomId, game) => {
         url: 'https://api.twitch.tv/helix/games?name=' + encodeURIComponent(game.toLowerCase()),
         headers: {
           Authorization: 'Bearer ' + data.token,
-          'Client-ID': config.get('bot.client_id')
+          'Client-ID': config.bot.client_id
         }
       }, (err, res, body) => {
         const gameObj = JSON.parse(body)
@@ -49,7 +49,7 @@ const setGame = (channel, roomId, game) => {
           url: 'https://api.twitch.tv/helix/channels?broadcaster_id=' + roomId,
           headers: {
             Authorization: 'Bearer ' + data.token,
-            'Client-ID': config.get('bot.client_id'),
+            'Client-ID': config.bot.client_id,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ game_id: gameObj.data[0].id })

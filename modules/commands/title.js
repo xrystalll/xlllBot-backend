@@ -1,5 +1,5 @@
-const config = require('config')
 const path = require('path')
+const config = require(path.join(__dirname, '..', '..', 'config', 'default.json'))
 const { checkSettings } = require(path.join(__dirname, '..', 'Utils'))
 const client = require(path.join(__dirname, '..', 'client'))
 const UserDB = require(path.join(__dirname, '..', 'models', 'UserDB'))
@@ -19,7 +19,7 @@ const title = (channel, roomId, args) => {
             url: 'https://api.twitch.tv/helix/channels?broadcaster_id=' + roomId,
             headers: {
               Authorization: 'Bearer ' + data.token,
-              'Client-ID': config.get('bot.client_id'),
+              'Client-ID': config.bot.client_id,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({ title: status })

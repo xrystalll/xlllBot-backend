@@ -1,5 +1,5 @@
-const config = require('config')
 const path = require('path')
+const config = require(path.join(__dirname, '..', 'config', 'default.json'))
 
 const Mongoose = require('mongoose')
 const cachegoose = require('cachegoose')
@@ -8,11 +8,11 @@ const ChannelsDB = require(path.join(__dirname, 'models', 'ChannelsDB'))
  
 cachegoose(Mongoose, {
   engine: 'redis',
-  port: config.get('redis.port'),
-  host: config.get('redis.host')
+  port: config.redis.port,
+  host: config.redis.host
 })
 
-Mongoose.connect(config.get('mongoremote'), { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true })
+Mongoose.connect(config.mongoremote, { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true })
   .then(() => {
     ChannelsDB.updateMany({ bot_active: true }, { bot_active: false }, (err) => {
       if (err) console.error('Change bot status error:', err)

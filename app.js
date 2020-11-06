@@ -1,5 +1,5 @@
 const path = require('path')
-const config = require('config')
+const config = require(path.join(__dirname, 'config', 'default.json'))
 
 const express = require('express')
 const app = express()
@@ -10,7 +10,7 @@ const port = process.env.PORT || 1337
 const routes = require(path.join(__dirname, 'routes'))
 
 const redis = require('redis')
-const redisClient = redis.createClient(config.get('redis.port'))
+const redisClient = redis.createClient(config.redis.port)
 const cachegoose = require('cachegoose')
 
 const session = require('express-session')
@@ -72,7 +72,7 @@ client.on('chat', (sharpChannel, user, message, self) => {
     })
     .catch(err => console.error(err))
 
-  if (message.indexOf('@' + config.get('bot.username')) !== -1) {
+  if (message.indexOf('@' + config.bot.username) !== -1) {
     client.say(channel, `@${user.username} больше мне не пиши бля от тебя гавной воняет`)
   }
 
@@ -286,7 +286,7 @@ app.use(hpp()),
 app.use(helmet.noSniff()),
 app.use(xssFilter()),
 app.use(cors({
-  origin: config.get('clientEndPoint'),
+  origin: config.clientEndPoint,
   credentials: true
 })),
 
@@ -297,7 +297,7 @@ OAuth2Strategy.prototype.userProfile = (accessToken, next) => {
     url: 'https://api.twitch.tv/helix/users',
     headers: {
       Authorization: 'Bearer ' + accessToken,
-      'Client-ID': config.get('bot.client_id'),
+      'Client-ID': config.bot.client_id,
       Accept: 'application/vnd.twitchtv.v5+json'
     }
   }, (err, res, data) => {
@@ -312,9 +312,9 @@ OAuth2Strategy.prototype.userProfile = (accessToken, next) => {
 passport.use('twitch', new OAuth2Strategy({
   authorizationURL: 'https://id.twitch.tv/oauth2/authorize',
   tokenURL: 'https://id.twitch.tv/oauth2/token',
-  clientID: config.get('bot.client_id'),
-  clientSecret: config.get('auth.secret'),
-  callbackURL: config.get('auth.callback_url'),
+  clientID: config.bot.client_id,
+  clientSecret: config.auth.secret,
+  callbackURL: config.auth.callback_url,
   scope: ['user:read:email', 'channel:read:redemptions', 'user:edit:broadcast'],
   state: true
 }, (accessToken, refreshToken, profile, next) => {
@@ -350,12 +350,12 @@ passport.deserializeUser((user, next) => {
 
 app.get('/auth/twitch', passport.authenticate('twitch')),
 
-app.get('/auth/twitch/callback', passport.authenticate('twitch', { failureRedirect: config.get('clientEndPoint') + '/auth/error' }), (req, res) => {
-  if (!req.session.passport) return res.status(401).redirect(config.get('clientEndPoint') + '/auth/error')
+app.get('/auth/twitch/callback', passport.authenticate('twitch', { failureRedirect: config.clientEndPoint + '/auth/error' }), (req, res) => {
+  if (!req.session.passport) return res.status(401).redirect(config.clientEndPoint + '/auth/error')
 
   const { id } = req.session.passport.user.data[0]
 
-  if (!id) return res.status(401).redirect(config.get('clientEndPoint') + '/auth/error')
+  if (!id) return res.status(401).redirect(config.clientEndPoint + '/auth/error')
 
   const token = req.session.passport.user.accessToken
   const hash = crypto.createHash('md5').update(req.session.passport.user.refreshToken + 'is' + req.session.passport.user.data[0].login).digest('hex')
@@ -372,11 +372,11 @@ app.get('/auth/twitch/callback', passport.authenticate('twitch', { failureRedire
 
           io.sockets.emit('auth', { auth: true })
 
-          res.redirect(config.get('clientEndPoint') + '/auth')
+          res.redirect(config.clientEndPoint + '/auth')
         })
-        .catch(error => res.status(401).redirect(config.get('clientEndPoint') + '/auth/error'))
+        .catch(error => res.status(401).redirect(config.clientEndPoint + '/auth/error'))
     })
-    .catch(error => res.status(401).redirect(config.get('clientEndPoint') + '/auth/error'))
+    .catch(error => res.status(401).redirect(config.clientEndPoint + '/auth/error'))
 }),
 
 app.use('/', routes),

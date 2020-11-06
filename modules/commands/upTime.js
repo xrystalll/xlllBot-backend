@@ -1,5 +1,5 @@
-const config = require('config')
 const path = require('path')
+const config = require(path.join(__dirname, '..', '..', 'config', 'default.json'))
 const { timeFormat } = require(path.join(__dirname, '..', 'Utils'))
 const client = require(path.join(__dirname, '..', 'client'))
 const UserDB = require(path.join(__dirname, '..', 'models', 'UserDB'))
@@ -13,7 +13,7 @@ const upTime = (channel, roomId) => {
         url: 'https://api.twitch.tv/helix/streams?user_id=' + roomId,
         headers: {
           Authorization: 'Bearer ' + data.token,
-          'Client-ID': config.get('bot.client_id')
+          'Client-ID': config.bot.client_id
         }
       }, (err, res, body) => {
         if (err) return

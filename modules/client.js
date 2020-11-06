@@ -1,17 +1,18 @@
+const path = require('path')
+const config = require(path.join(__dirname, '..', 'config', 'default.json'))
 const tmi = require('tmi.js')
-const config = require('config')
 
 const client = new tmi.client({
   options: {
-    debug: config.get('options.debug')
+    debug: config.options.debug
   },
   connection: {
-    secure: config.get('connection.secure'),
-    reconnect: config.get('connection.reconnect')
+    secure: config.connection.secure,
+    reconnect: config.connection.reconnect
   },
   identity: {
-    username: config.get('bot.username'),
-    password: config.get('bot.oauth_token')
+    username: config.bot.username,
+    password: config.bot.oauth_token
   },
   channels: []
 })

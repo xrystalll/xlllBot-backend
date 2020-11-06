@@ -1,5 +1,5 @@
-const config = require('config')
 const path = require('path')
+const config = require(path.join(__dirname, '..', '..', 'config', 'default.json'))
 const { timeFormat } = require(path.join(__dirname, '..', 'Utils'))
 const client = require(path.join(__dirname, '..', 'client'))
 const UserDB = require(path.join(__dirname, '..', 'models', 'UserDB'))
@@ -24,7 +24,7 @@ const old = (channel, state, args, checkBroadcasterPermission) => {
           url: `https://api.twitch.tv/helix/users/follows?from_id=${userId}&to_id=${roomId}`,
           headers: {
             Authorization: 'Bearer ' + data.token,
-            'Client-ID': config.get('bot.client_id')
+            'Client-ID': config.bot.client_id
           }
         }, (err, res, body) => {
           if (err) return
@@ -52,7 +52,7 @@ const old = (channel, state, args, checkBroadcasterPermission) => {
           url: `https://api.twitch.tv/helix/users?login=${targetUser}`,
           headers: {
             Authorization: 'Bearer ' + data.token,
-            'Client-ID': config.get('bot.client_id')
+            'Client-ID': config.bot.client_id
           }
         }, (err, res, body) => {
           if (err) return
@@ -66,7 +66,7 @@ const old = (channel, state, args, checkBroadcasterPermission) => {
               url: `https://api.twitch.tv/helix/users/follows?from_id=${user[0].id}&to_id=${roomId}`,
               headers: {
                 Authorization: 'Bearer ' + data.token,
-                'Client-ID': config.get('bot.client_id')
+                'Client-ID': config.bot.client_id
               }
             }, (err, res, body) => {
               if (err) return
