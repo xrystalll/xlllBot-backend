@@ -8,15 +8,16 @@
   },
   "bot": {
     "username": "",
-    "oauth_token": "",
-    "client_id": ""
+    "oauth_token": ""
   },
   "auth": {
+    "client_id": "",
     "secret": "",
+    "callback_host": "",
     "callback_url": "/auth/twitch/callback"
   },
   "mongoremote": "mongodb+srv://",
-  "clientEndPoint": "",
+  "clientEndPoint": "http://localhost:3000",
   "redis": {
     "port": 6379,
     "host": "localhost"
