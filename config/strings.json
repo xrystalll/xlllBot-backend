@@ -83,6 +83,7 @@
   "chatNotifyAboutRenewalAnonGiftSub": "Уведомлять в чате о продлении анонимной подарочной подписки",
   "chatNotifyAboutRaid": "Уведомлять в чате о рейде",
   "chatNotifyAboutDonateBits": "Уведомлять в чате о донате битс",
+  "chatNotifyAboutNewDonate": "Уведомлять в чате о новом донате на DonationAlerts",
   "unableGetSettings": "Unable to get list of settings",
   "stateMustBeBoolean": "State must be boolean",
   "valueMustBeNumber": "Value must be a number",

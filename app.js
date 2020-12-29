@@ -266,6 +266,12 @@ pubsub.on('error', (data) => {
   console.error(data)
 })
 
+// checkSettings(channel, 'newdonate').then(bool => {
+//   if (bool) {
+//     client.say(channel, 'New Donate')
+//   }
+// })
+
 const limiter = new RateLimit({
   windowMs: 1 * 60 * 1000,
   max: 50,

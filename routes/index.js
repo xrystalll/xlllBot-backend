@@ -442,6 +442,12 @@ router.get('/api/settings/all', (req, res) => {
                 state: true,
                 description: Strings.chatNotifyAboutDonateBits,
                 channel
+              }, {
+                sort: 18,
+                name: 'newdonate',
+                state: false,
+                description: Strings.chatNotifyAboutNewDonate,
+                channel
               }
             ]
             SettingsDB.insertMany(defaultSettings)
